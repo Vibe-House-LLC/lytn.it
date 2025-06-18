@@ -1,3 +1,0 @@
-[submodule "api/vainID"]
-	path = api/vainID
-	url = git@github.com:davisengeler/vainID.git
