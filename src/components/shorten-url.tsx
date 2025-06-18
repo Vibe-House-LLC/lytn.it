@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, ExternalLink, Loader2 } from "lucide-react";
+import { Copy, ExternalLink, Loader2, ArrowRight } from "lucide-react";
 import shortenUrl from "@/api/shortenUrl";
 
 export default function ShortenUrl() {
@@ -62,86 +61,74 @@ export default function ShortenUrl() {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto p-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">
-                        Lytn.it URL Shortener
-                    </CardTitle>
-                    <CardDescription className="text-center">
-                        Shorten your long URLs into compact, shareable links
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="flex gap-2">
-                            <Input
-                                type="url"
-                                placeholder="Enter your URL here..."
-                                value={url}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
-                                className="flex-1"
-                                disabled={isLoading}
-                            />
-                            <Button 
-                                type="submit" 
-                                disabled={isLoading}
-                                className="min-w-[100px]"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Shortening...
-                                    </>
-                                ) : (
-                                    'Shorten'
-                                )}
-                            </Button>
-                        </div>
-                    </form>
-
-                    {error && (
-                        <Alert variant="destructive">
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
+        <div className="w-full space-y-6">
+            {/* Main input form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                    type="url"
+                    placeholder="https://"
+                    value={url}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
+                    className="w-full h-12 px-4 text-base border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400"
+                    disabled={isLoading}
+                />
+                <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-auto px-6 py-3 bg-[#467291] hover:bg-[#3d6280] text-white font-medium rounded-md flex items-center gap-2 mx-auto"
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            LIGHTEN IT
+                        </>
+                    ) : (
+                        <>
+                            LIGHTEN IT
+                            <ArrowRight className="h-4 w-4" />
+                        </>
                     )}
+                </Button>
+            </form>
 
-                    {shortenedUrl && (
-                        <Card className="bg-green-50 border-green-200">
-                            <CardContent className="pt-6">
-                                <div className="space-y-3">
-                                    <p className="text-sm font-medium text-green-800">
-                                        Your shortened URL:
-                                    </p>
-                                    <div className="flex items-center gap-2 p-3 bg-white rounded-md border">
-                                        <code className="flex-1 text-sm font-mono text-green-700">
-                                            {shortenedUrl}
-                                        </code>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleCopy}
-                                            className="flex items-center gap-1"
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                            {copied ? 'Copied!' : 'Copy'}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleVisit}
-                                            className="flex items-center gap-1"
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-                                            Visit
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-                </CardContent>
-            </Card>
+            {/* Error handling */}
+            {error && (
+                <Alert variant="destructive" className="max-w-md mx-auto">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
+            {/* Result display */}
+            {shortenedUrl && (
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 max-w-md mx-auto">
+                    <p className="text-sm font-medium text-green-800 mb-2">
+                        Your shortened URL:
+                    </p>
+                    <div className="flex items-center gap-2 p-3 bg-white rounded-md border">
+                        <code className="flex-1 text-sm font-mono text-green-700 break-all">
+                            {shortenedUrl}
+                        </code>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCopy}
+                            className="flex items-center gap-1 shrink-0"
+                        >
+                            <Copy className="h-4 w-4" />
+                            {copied ? 'Copied!' : 'Copy'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleVisit}
+                            className="flex items-center gap-1 shrink-0"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            Visit
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
