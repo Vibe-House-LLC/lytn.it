@@ -9,39 +9,71 @@ function toBase(n: number): string {
     
     if (!n) return "0";
     
-    return toBase(Math.floor(n / base)).replace(/^0+/, '') + chars[Math.floor(n % base)];
+    const result = toBase(Math.floor(n / base)).replace(/^0+/, '') + chars[Math.floor(n % base)];
+    return result;
 }
 
 /**
- * Generate a unique ID based on iteration and seed
- * This creates pseudo-random looking IDs that are deterministic and unique
- * Minimum length: 6 characters
+ * Calculate the greatest common divisor of two numbers
+ */
+function gcd(a: number, b: number): number {
+    while (b !== 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+/**
+ * Create a generator that's coprime to the capacity
+ */
+function createGenerator(capacity: number, seed: string): number {
+    const hashedSeed = parseInt(createHash('sha256').update(seed).digest('hex').substring(0, 8), 16);
+    let generator = hashedSeed % Math.floor(capacity * 0.8); // Starting point
+    
+    while (gcd(generator, capacity) !== 1 && generator < capacity) {
+        generator += 1; // Increment until we find a coprime generator
+    }
+    
+    if (gcd(generator, capacity) !== 1) {
+        throw new Error(`Could not find a 'generator' that is relatively prime to the capacity (${capacity})`);
+    }
+    
+    return generator;
+}
+
+/**
+ * Generate a unique ID based on iteration and seed using the VainID algorithm
+ * This creates the shortest possible IDs while maintaining pseudo-randomness
  */
 export function generateId(iteration: number, seed: string): string {
-    if (iteration === 0) return "000000"; // 6-character version of "0"
+    // Determine required values
+    let requiredDigits: number;
+    try {
+        // Determine the number of digits required for this iteration value
+        requiredDigits = Math.ceil(Math.log(iteration + 1) / Math.log(62));
+    } catch {
+        requiredDigits = 1;
+    }
     
-    // Create a hash of seed + iteration for uniqueness
-    const hash = createHash('sha256').update(`${seed}${iteration}`).digest('hex');
+    let unavailable: number;
+    try {
+        // Determine the capacity of the previous number of digits (how many are 'unavailable')
+        unavailable = Math.ceil(Math.pow(62, requiredDigits - 1));
+        if (unavailable === 1) {
+            unavailable = 0;
+        }
+    } catch {
+        unavailable = 0;
+    }
     
-    // Use multiple parts of the hash for better randomness
-    const part1 = parseInt(hash.substring(0, 8), 16);
-    const part2 = parseInt(hash.substring(8, 16), 16);
-    const part3 = parseInt(hash.substring(16, 24), 16);
+    const capacity = Math.max(62, Math.ceil(Math.pow(62, requiredDigits)) - unavailable);
+    const generator = createGenerator(capacity, seed);
     
-    // Combine parts with iteration to ensure uniqueness
-    const combined = (part1 ^ part2 ^ part3 ^ iteration) >>> 0;
+    // Calculate the next id to generate and convert it to a base 62 alphanumeric string
+    const calc = ((iteration - unavailable) * generator) % capacity + unavailable;
+    const id = toBase(calc);
     
-    // Calculate range for 6+ character IDs
-    // Base62^5 = 916,132,832 (minimum 6-char value)
-    // Base62^7 = 3,521,614,606,208 (maximum 7-char value, but too large)
-    // So we'll use a large range that ensures 6+ characters but stays manageable
-    const minValue = 916132832; // 62^5 for guaranteed 6+ chars
-    const range = 2000000000; // Large range for variety
-    const scaled = (combined % range) + minValue;
-    
-    // Convert to base 62
-    const base62 = toBase(scaled);
-    
-    // Ensure minimum 6 characters (pad with leading zeros if needed)
-    return base62.padStart(6, '0');
+    return id;
 } 

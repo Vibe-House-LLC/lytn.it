@@ -1,11 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { generateClient } from "aws-amplify/api";
-import { Schema } from "../../../amplify/data/resource";
 import { trackForward } from "../../lib/tracking";
-
-const client = generateClient<Schema>({authMode: 'identityPool'});
+import { cookiesClient } from '@/utilities/amplify-utils';
 
 interface PageProps {
     params: Promise<{
@@ -15,7 +12,7 @@ interface PageProps {
 
 async function getDestination(id: string): Promise<string | null> {
     try {
-        const response = await client.models.shortenedUrl.get({ id });
+        const response = await cookiesClient.models.shortenedUrl.get({ id });
         return response.data?.destination || null;
     } catch (error) {
         console.error('Error fetching destination:', error);

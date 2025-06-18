@@ -103,24 +103,30 @@ export const handler: Handler = async (event, context) => {
             return 'Error: The link seems to be invalid...';
         }
 
-        // Generate unique ID
+        // Generate unique ID using VainID algorithm
         let generatedId: string;
         let attempts = 0;
         const maxAttempts = 10;
 
-        do {
+        while (true) {
             const iteration = await getIteration();
             console.log('Got iteration:', iteration);
             
             generatedId = generateId(iteration, SEED);
             console.log('Generated ID:', generatedId);
             
-            attempts++;
-            
-            if (attempts >= maxAttempts) {
-                throw new Error('Unable to generate unique ID after maximum attempts');
+            if (!(await hasConflict(generatedId))) {
+                console.log(`No conflict with ${generatedId}`);
+                break;
+            } else {
+                console.log(`Conflict with ${generatedId}, generating a new one.`);
+                attempts++;
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Unable to generate unique ID after maximum attempts');
+                }
             }
-        } while (await hasConflict(generatedId));
+        }
 
         console.log('Final unique ID:', generatedId);
 

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-amplify/adapter-nextjs": "^1.6.4",
     "@radix-ui/react-slot": "^1.2.3",
     "aws-amplify": "^6.15.1",
     "class-variance-authority": "^0.7.1",
