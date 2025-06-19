@@ -75,6 +75,7 @@ export default function ShortenUrl() {
                     placeholder="https://"
                     value={url}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
+                    autoComplete="off"
                     autoFocus
                     disabled={isLoading}
                 />
