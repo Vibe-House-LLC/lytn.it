@@ -61,6 +61,29 @@ export default function AuthButton() {
         .amplify-authenticator-container .amplify-heading {
           display: none !important;
         }
+        
+        /* Restore original font sizes */
+        .amplify-authenticator-container .amplify-button {
+          font-size: 1rem !important;
+          padding: 0.75rem 1rem !important;
+        }
+        
+        .amplify-authenticator-container .amplify-input {
+          font-size: 1rem !important;
+          padding: 0.75rem !important;
+        }
+        
+        .amplify-authenticator-container .amplify-label {
+          font-size: 0.875rem !important;
+        }
+        
+        .amplify-authenticator-container .amplify-text {
+          font-size: 1rem !important;
+        }
+        
+        .amplify-authenticator-container .amplify-tabs-item {
+          font-size: 1rem !important;
+        }
       `}</style>
     </>
   );

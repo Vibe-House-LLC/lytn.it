@@ -70,7 +70,8 @@ export default function ShortenUrl() {
                 <input
                     id="textbox"
                     type="text"
-                    className="relative w-[90%] h-[70px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] text-left text-[25px] outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out]"
+                    className="relative w-[90%] h-[70px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out]"
+                    style={{ fontSize: '25px' }}
                     name="link"
                     placeholder="https://"
                     value={url}
@@ -84,10 +85,11 @@ export default function ShortenUrl() {
                 <div className="flex justify-center mt-[30px]">
                     <button 
                         type="submit"
-                        className="bg-[#467291] rounded-[4px] border border-[#5d5d5d] text-white px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center text-[22px] transition-all duration-200 cursor-pointer w-[210px] h-[65px] hover:bg-white hover:text-[#467291] animate-[fadeInUp_1s_ease-out]"
+                        className="bg-[#467291] rounded-[4px] border border-[#5d5d5d] text-white px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center transition-all duration-200 cursor-pointer w-[210px] h-[65px] hover:bg-white hover:text-[#467291] animate-[fadeInUp_1s_ease-out]"
                         style={{ 
                             fontFamily: 'var(--font-roboto-condensed)',
-                            letterSpacing: '2pt'
+                            letterSpacing: '2pt',
+                            fontSize: '22px'
                         }}
                         disabled={isLoading}
                     >
