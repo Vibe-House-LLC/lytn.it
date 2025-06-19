@@ -28,8 +28,9 @@ const ubuntuMono = Ubuntu_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "lytn.it - URL Shortener",
-  description: "Lighten your URLs with lytn.it",
+  title: "lytn.it  Link Shortener | Make a long link short.",
+  description: "Heavy link? lytn.it -- A simple and effective link shortener. One of the shortest out there. Track clicks and referrals, add passwords, create custom links, and more.",
+  keywords: "shortest, link shortener, lighten it, make a small link, shorten, password, protect, track, stats, analytics, clicks, temporary, private, a link, simple",
 };
 
 export default function RootLayout({
@@ -41,6 +42,9 @@ export default function RootLayout({
     <>
     <AmplifySetup>
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+      </head>
       <body
         className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
       >
