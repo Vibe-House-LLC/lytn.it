@@ -1,8 +1,7 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { trackForward } from "../../lib/tracking";
 import { cookiesClient } from '@/utilities/amplify-utils';
+import LinkPreview from '@/components/link-preview';
 
 interface PageProps {
     params: Promise<{
@@ -24,27 +23,46 @@ export default async function ForwardPage({ params }: PageProps) {
     const { id } = await params;
     
     if (!id) {
-        redirect('/');
-        return null;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="max-w-md w-full text-center">
+                    <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                        Invalid Link
+                    </h2>
+                    <p className="text-gray-600 mb-8">
+                        No link ID was provided.
+                    </p>
+                    <Link 
+                        href="/" 
+                        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Create a New Short Link
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
     const destination = await getDestination(id);
     
     if (destination) {
-        // Track the forward event (similar to Python version)
+        // Get headers for tracking
         const headersList = await headers();
         const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
         const referer = headersList.get('referer') || '';
         
-        trackForward({
-            id,
-            destination,
-            ip,
-            referer
-        });
-        
-        redirect(destination);
-        return null;
+        // Pass tracking data to the preview component
+        return (
+            <LinkPreview 
+                id={id}
+                destination={destination}
+                trackingData={{
+                    ip,
+                    referer
+                }}
+            />
+        );
     } else {
         // Return 404 page for non-existent IDs
         return (
