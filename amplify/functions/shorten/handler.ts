@@ -1,16 +1,67 @@
 import type { Handler } from 'aws-lambda';
-import { Amplify } from 'aws-amplify';
-import { generateClient } from 'aws-amplify/api';
-import type { Schema } from '../../data/resource';
+import { Sha256 } from '@aws-crypto/sha256-js';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { SignatureV4 } from '@smithy/signature-v4';
+import { HttpRequest } from '@smithy/protocol-http';
 import { generateId } from './vainId';
-// @ts-ignore
-import amplifyConfig from './amplify_outputs.json';
 
-// Configure Amplify with the same configuration as the frontend
-Amplify.configure(amplifyConfig);
-
-const client = generateClient<Schema>();
+const GRAPHQL_ENDPOINT = process.env.API_LYTNIT_GRAPHQLAPIENDPOINTOUTPUT;
+const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 const SEED = 'lytnit';
+
+/**
+ * GraphQL client for making signed requests to AppSync
+ */
+class GraphQLClient {
+    private signer: SignatureV4;
+
+    constructor() {
+        this.signer = new SignatureV4({
+            credentials: defaultProvider(),
+            region: AWS_REGION,
+            service: 'appsync',
+            sha256: Sha256
+        });
+    }
+
+    async request<T = any>(query: string, variables?: any): Promise<T> {
+        if (!GRAPHQL_ENDPOINT) {
+            throw new Error('GraphQL endpoint not configured');
+        }
+
+        const endpoint = new URL(GRAPHQL_ENDPOINT);
+        
+        const requestToBeSigned = new HttpRequest({
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                host: endpoint.host
+            },
+            hostname: endpoint.host,
+            body: JSON.stringify({ query, variables }),
+            path: endpoint.pathname
+        });
+
+        const signed = await this.signer.sign(requestToBeSigned);
+        
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: 'POST',
+            headers: signed.headers,
+            body: signed.body
+        });
+
+        const result = await response.json();
+        
+        if (result.errors) {
+            console.error('GraphQL errors:', result.errors);
+            throw new Error(`GraphQL error: ${result.errors[0]?.message || 'Unknown error'}`);
+        }
+
+        return result.data;
+    }
+}
+
+const graphqlClient = new GraphQLClient();
 
 /**
  * Check if a URL meets basic requirements
@@ -43,26 +94,66 @@ function cleanUrl(url: string): string {
 async function getIteration(): Promise<number> {
     try {
         // Try to find existing iterator by seed
-        const existing = await client.models.iterator.list({
+        const listIteratorsQuery = `
+            query ListIterators($filter: ModelIteratorFilterInput) {
+                listIterators(filter: $filter) {
+                    items {
+                        id
+                        seed
+                        iteration
+                    }
+                }
+            }
+        `;
+
+        const existingData = await graphqlClient.request(listIteratorsQuery, {
             filter: { seed: { eq: SEED } }
         });
         
-        if (existing.data && existing.data.length > 0) {
+        if (existingData.listIterators.items && existingData.listIterators.items.length > 0) {
             // Update existing iterator
-            const currentIterator = existing.data[0];
-            const updated = await client.models.iterator.update({
-                id: currentIterator.id,
-                seed: SEED,
-                iteration: (currentIterator.iteration || 0) + 1
+            const currentIterator = existingData.listIterators.items[0];
+            const newIteration = (currentIterator.iteration || 0) + 1;
+            
+            const updateIteratorMutation = `
+                mutation UpdateIterator($input: UpdateIteratorInput!) {
+                    updateIterator(input: $input) {
+                        id
+                        seed
+                        iteration
+                    }
+                }
+            `;
+
+            const updatedData = await graphqlClient.request(updateIteratorMutation, {
+                input: {
+                    id: currentIterator.id,
+                    seed: SEED,
+                    iteration: newIteration
+                }
             });
-            return updated.data?.iteration || 1;
+            
+            return updatedData.updateIterator?.iteration || 1;
         } else {
             // Create new iterator
-            const created = await client.models.iterator.create({
-                seed: SEED,
-                iteration: 1
+            const createIteratorMutation = `
+                mutation CreateIterator($input: CreateIteratorInput!) {
+                    createIterator(input: $input) {
+                        id
+                        seed
+                        iteration
+                    }
+                }
+            `;
+
+            const createdData = await graphqlClient.request(createIteratorMutation, {
+                input: {
+                    seed: SEED,
+                    iteration: 1
+                }
             });
-            return created.data?.iteration || 1;
+            
+            return createdData.createIterator?.iteration || 1;
         }
     } catch (error) {
         console.error('Error managing iteration:', error);
@@ -75,8 +166,16 @@ async function getIteration(): Promise<number> {
  */
 async function hasConflict(id: string): Promise<boolean> {
     try {
-        const result = await client.models.shortenedUrl.get({ id });
-        return !!result.data;
+        const getShortenedUrlQuery = `
+            query GetShortenedUrl($id: ID!) {
+                getShortenedUrl(id: $id) {
+                    id
+                }
+            }
+        `;
+
+        const data = await graphqlClient.request(getShortenedUrlQuery, { id });
+        return !!data.getShortenedUrl;
     } catch {
         return false;
     }
@@ -138,17 +237,31 @@ export const handler: Handler = async (event, context) => {
         console.log('Creating database record...');
         
         // Create shortened URL record
-        const newRecord = await client.models.shortenedUrl.create({
-            id: generatedId,
-            url: cleanedUrl,
-            destination: cleanedUrl,
-            ip: clientIp,
-            createdAt: new Date().toISOString()
+        const createShortenedUrlMutation = `
+            mutation CreateShortenedUrl($input: CreateShortenedUrlInput!) {
+                createShortenedUrl(input: $input) {
+                    id
+                    url
+                    destination
+                    ip
+                    createdAt
+                }
+            }
+        `;
+
+        const newRecord = await graphqlClient.request(createShortenedUrlMutation, {
+            input: {
+                id: generatedId,
+                url: cleanedUrl,
+                destination: cleanedUrl,
+                ip: clientIp,
+                createdAt: new Date().toISOString()
+            }
         });
 
         console.log('Database record created:', newRecord);
 
-        if (newRecord.data) {
+        if (newRecord.createShortenedUrl) {
             const result = `lytn.it/${generatedId}`;
             console.log('Returning result:', result);
             return result;
