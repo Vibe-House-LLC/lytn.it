@@ -1,8 +1,6 @@
 import type { Handler } from 'aws-lambda';
-import { Sha256 } from '@aws-crypto/sha256-js';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
-import { SignatureV4 } from '@smithy/signature-v4';
-import { HttpRequest } from '@smithy/protocol-http';
+import * as aws4 from 'aws4';
 import { generateId } from './vainId';
 
 const GRAPHQL_ENDPOINT = process.env.API_LYTNIT_GRAPHQLAPIENDPOINTOUTPUT;
@@ -13,15 +11,10 @@ const SEED = 'lytnit';
  * GraphQL client for making signed requests to AppSync
  */
 class GraphQLClient {
-    private signer: SignatureV4;
+    private credentials: any;
 
     constructor() {
-        this.signer = new SignatureV4({
-            credentials: defaultProvider(),
-            region: AWS_REGION,
-            service: 'appsync',
-            sha256: Sha256
-        });
+        this.credentials = defaultProvider();
     }
 
     async request<T = any>(query: string, variables?: any): Promise<T> {
@@ -30,24 +23,36 @@ class GraphQLClient {
         }
 
         const endpoint = new URL(GRAPHQL_ENDPOINT);
+        const body = JSON.stringify({ query, variables });
         
-        const requestToBeSigned = new HttpRequest({
+        // Get AWS credentials
+        const creds = await this.credentials();
+        
+        // Prepare request for aws4 signing
+        const request = {
             method: 'POST',
+            url: GRAPHQL_ENDPOINT,
+            host: endpoint.host,
+            path: endpoint.pathname,
             headers: {
                 'Content-Type': 'application/json',
-                host: endpoint.host
             },
-            hostname: endpoint.host,
-            body: JSON.stringify({ query, variables }),
-            path: endpoint.pathname
-        });
+            body,
+            service: 'appsync',
+            region: AWS_REGION,
+        };
 
-        const signed = await this.signer.sign(requestToBeSigned);
+        // Sign the request using aws4
+        const signedRequest = aws4.sign(request, {
+            accessKeyId: creds.accessKeyId,
+            secretAccessKey: creds.secretAccessKey,
+            sessionToken: creds.sessionToken,
+        });
         
         const response = await fetch(GRAPHQL_ENDPOINT, {
             method: 'POST',
-            headers: signed.headers,
-            body: signed.body
+            headers: signedRequest.headers as HeadersInit,
+            body,
         });
 
         const result = await response.json();

@@ -13,13 +13,12 @@ Successfully refactored the Shorten function from using Amplify frontend code (`
 - Frontend-style package configuration
 
 **After:**
-- **AWS SDK v3 Dependencies:**
-  - `@aws-crypto/sha256-js`: ^5.2.0
-  - `@aws-sdk/credential-provider-node`: ^3.515.0
-  - `@smithy/protocol-http`: ^3.0.0 (updated from deprecated `@aws-sdk/protocol-http`)
-  - `@smithy/signature-v4`: ^3.0.0 (updated from deprecated `@aws-sdk/signature-v4`)
+- **Dependencies:**
+  - `@aws-sdk/credential-provider-node`: ^3.515.0 (for AWS credential management)
+  - `aws4`: ^1.12.0 (third-party library for AWS Signature V4 signing, avoiding Smithy packages)
 - **Dev Dependencies:**
   - `@types/aws-lambda`: ^8.10.92
+  - `@types/aws4`: ^1.11.3 (TypeScript definitions for aws4)
   - `@types/node`: ^20.0.0
   - `typescript`: ^5.0.0
 
@@ -33,15 +32,14 @@ Successfully refactored the Shorten function from using Amplify frontend code (`
   - Removed Amplify configuration code
 
 - **Added Backend Imports:**
-  - `@aws-crypto/sha256-js` for signing
   - `@aws-sdk/credential-provider-node` for AWS credentials
-  - `@smithy/signature-v4` for request signing
-  - `@smithy/protocol-http` for HTTP requests
+  - `aws4` library for AWS Signature V4 signing (avoiding Smithy packages)
 
 - **Created Custom GraphQL Client:**
-  - Implemented `GraphQLClient` class using AWS SDK v3
-  - Added IAM-signed GraphQL requests using SignatureV4
+  - Implemented `GraphQLClient` class using AWS SDK v3 for credential management
+  - Added IAM-signed GraphQL requests using `aws4` library
   - Proper backend authentication with AWS credentials
+  - Avoided Smithy packages as requested by avoiding `@smithy/signature-v4` and `@smithy/protocol-http`
 
 - **Replaced Model Operations with Raw GraphQL:**
   - `client.models.iterator.list()` → `listIterators` GraphQL query
@@ -61,7 +59,7 @@ Successfully refactored the Shorten function from using Amplify frontend code (`
 
 ### Authentication Method
 - **Before:** Used Amplify frontend client authentication
-- **After:** Uses AWS SDK v3 with IAM roles and SignatureV4 signing for proper backend authentication
+- **After:** Uses AWS SDK v3 with IAM roles and `aws4` library for AWS Signature V4 signing (avoiding Smithy packages)
 
 ### Environment Variables
 - Uses `API_LYTNIT_GRAPHQLAPIENDPOINTOUTPUT` for GraphQL endpoint
@@ -74,9 +72,9 @@ Successfully refactored the Shorten function from using Amplify frontend code (`
   - `shorten` query with guest authorization
 
 ## Deployment Status
-✅ **Dependencies Installed:** All AWS SDK v3 packages installed successfully
+✅ **Dependencies Installed:** All required packages installed successfully (avoiding Smithy packages)
 ✅ **TypeScript Compilation:** Passes without errors
-✅ **Deprecation Warnings:** Resolved by updating to Smithy packages
+✅ **Smithy Packages Avoided:** Used `aws4` library instead of deprecated `@aws-sdk/signature-v4` and `@aws-sdk/protocol-http`
 ✅ **Code Quality:** No linter errors
 
 ## Testing Recommendations
