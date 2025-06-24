@@ -32,7 +32,9 @@ export default function ShortenUrl() {
                 if (result.startsWith('Error:')) {
                     setError(result.replace('Error: ', ''));
                 } else {
-                    setShortenedUrl(`https://${result}`);
+                    // Use current origin to construct the full URL
+                    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+                    setShortenedUrl(`${baseUrl}/${result}`);
                 }
             } else {
                 setError('Failed to shorten URL. Please try again.');
@@ -145,7 +147,7 @@ export default function ShortenUrl() {
                             href={shortenedUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[28pt] font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline"
+                            className="text-[28pt] font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline cursor-pointer"
                             style={{ fontFamily: 'var(--font-dosis)' }}
                         >
                             {displayUrl}

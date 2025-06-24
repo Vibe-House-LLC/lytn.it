@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { shorten } from '../functions/shorten/resource';
+import { reportLink } from '../functions/report-link/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -17,6 +18,18 @@ const schema = a.schema({
   .authorization((allow) => [allow.guest()])
   .handler(a.handler.function(shorten)),
 
+  reportLink: a
+    .mutation()
+    .arguments({
+      lytnUrl: a.string(),
+      shortId: a.string(),
+      reason: a.string(),
+      reporterEmail: a.string(),
+    })
+    .returns(a.json())
+    .authorization((allow) => [allow.guest()])
+    .handler(a.handler.function(reportLink)),
+
   shortenedUrl: a.model({
     id: a.id(),
     url: a.string(),
@@ -25,6 +38,23 @@ const schema = a.schema({
     createdAt: a.datetime(),
   })
   .authorization((allow) => [allow.guest().to(['create', 'read'])]),
+
+  reportedLink: a.model({
+    id: a.id(),
+    lytnUrl: a.string(),
+    shortId: a.string(),
+    destinationUrl: a.string(),
+    reason: a.string(),
+    reporterEmail: a.string(),
+    reporterIp: a.string(),
+    status: a.enum(['pending', 'reviewed', 'resolved', 'dismissed']),
+    createdAt: a.datetime(),
+    updatedAt: a.datetime(),
+  })
+  .authorization((allow) => [
+    allow.guest().to(['create']),
+    allow.group('admins').to(['read', 'update', 'delete'])
+  ]),
 
   iterator: a.model({
     id: a.id(),

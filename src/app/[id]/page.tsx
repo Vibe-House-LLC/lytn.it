@@ -22,6 +22,10 @@ async function getDestination(id: string): Promise<string | null> {
 export default async function ForwardPage({ params }: PageProps) {
     const { id } = await params;
     
+    // Get the current host for display purposes
+    const headersList = await headers();
+    const host = headersList.get('host') || 'this domain';
+    
     if (!id) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -47,8 +51,7 @@ export default async function ForwardPage({ params }: PageProps) {
     const destination = await getDestination(id);
     
     if (destination) {
-        // Get headers for tracking
-        const headersList = await headers();
+        // Get headers for tracking (headersList already defined above)
         const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
         const referer = headersList.get('referer') || '';
         
@@ -61,6 +64,7 @@ export default async function ForwardPage({ params }: PageProps) {
                     ip,
                     referer
                 }}
+                host={host}
             />
         );
     } else {
@@ -73,7 +77,7 @@ export default async function ForwardPage({ params }: PageProps) {
                         Link Not Found
                     </h2>
                     <p className="text-gray-600 mb-8">
-                        The shortened URL <code className="bg-gray-100 px-2 py-1 rounded text-sm">lytn.it/{id}</code> doesn&apos;t exist or has expired.
+                        The shortened URL <code className="bg-gray-100 px-2 py-1 rounded text-sm">{host}/{id}</code> doesn&apos;t exist or has expired.
                     </p>
                     <Link 
                         href="/" 

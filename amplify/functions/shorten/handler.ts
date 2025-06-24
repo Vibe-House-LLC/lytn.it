@@ -149,7 +149,7 @@ export const handler: Handler = async (event, context) => {
         console.log('Database record created:', newRecord);
 
         if (newRecord.data) {
-            const result = `lytn.it/${generatedId}`;
+            const result = generatedId;
             console.log('Returning result:', result);
             return result;
         } else {

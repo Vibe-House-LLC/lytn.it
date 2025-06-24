@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { trackForward } from '@/lib/tracking';
+import ReportLink from './report-link';
 
 interface LinkPreviewProps {
     id: string;
@@ -11,10 +12,23 @@ interface LinkPreviewProps {
         ip: string;
         referer: string;
     };
+    host?: string;
 }
 
-export default function LinkPreview({ id, destination, trackingData }: LinkPreviewProps) {
+export default function LinkPreview({ id, destination, trackingData, host = 'this domain' }: LinkPreviewProps) {
     const [isRedirecting, setIsRedirecting] = useState(false);
+    const [currentHost, setCurrentHost] = useState(host);
+    const [currentYear, setCurrentYear] = useState(2024);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportSuccess, setReportSuccess] = useState(false);
+
+    // Handle client-side only content to prevent hydration issues
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setCurrentHost(window.location.host);
+            setCurrentYear(new Date().getFullYear());
+        }
+    }, []);
 
     const handleContinue = async () => {
         setIsRedirecting(true);
@@ -33,6 +47,13 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
         
         // Redirect to the destination
         window.location.href = destination;
+    };
+
+    const handleReportSuccess = () => {
+        setShowReportModal(false);
+        setReportSuccess(true);
+        // Hide success message after 5 seconds
+        setTimeout(() => setReportSuccess(false), 5000);
     };
 
     // Extract domain from URL for display
@@ -57,16 +78,18 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
                         <div className="max-w-2xl mx-auto px-6">
                             {/* Logo */}
                             <div className="text-center mb-8">
-                                <h1 
-                                    className="text-[#467291] text-center leading-none mb-4"
-                                    style={{ 
-                                        fontFamily: 'var(--font-dosis)', 
-                                        fontSize: '80px',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    lytn.it
-                                </h1>
+                                <Link href="/" className="cursor-pointer">
+                                    <h1 
+                                        className="text-[#467291] text-center leading-none mb-4 hover:text-[#5a8eb2] transition-colors"
+                                        style={{ 
+                                            fontFamily: 'var(--font-dosis)', 
+                                            fontSize: '80px',
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        lytn.it
+                                    </h1>
+                                </Link>
                                 <p 
                                     className="text-[#6e6e6e] text-lg"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
@@ -74,6 +97,18 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
                                     You&apos;re about to visit:
                                 </p>
                             </div>
+
+                            {/* Success Message */}
+                            {reportSuccess && (
+                                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+                                    <div className="flex items-center">
+                                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        Link reported successfully. Thank you for helping keep our community safe.
+                                    </div>
+                                </div>
+                            )}
 
                             {/* URL Preview Card */}
                             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
@@ -117,7 +152,7 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
                                 <button
                                     onClick={handleContinue}
                                     disabled={isRedirecting}
-                                    className="bg-[#467291] text-white px-8 py-3 rounded-md hover:bg-[#365a73] transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-[#467291] text-white px-8 py-3 rounded-md hover:bg-[#365a73] transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
                                 >
                                     {isRedirecting ? (
@@ -135,20 +170,31 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
                                 
                                 <Link
                                     href="/"
-                                    className="bg-gray-100 text-gray-700 px-8 py-3 rounded-md hover:bg-gray-200 transition-colors font-medium text-lg text-center"
+                                    className="bg-gray-100 text-gray-700 px-8 py-3 rounded-md hover:bg-gray-200 transition-colors font-medium text-lg text-center cursor-pointer"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
                                 >
                                     Create New Link
                                 </Link>
                             </div>
+
+                            {/* Report Link Button */}
+                            <div className="text-center mt-6">
+                                <button
+                                    onClick={() => setShowReportModal(true)}
+                                    className="text-red-600 hover:text-red-800 underline text-sm font-medium cursor-pointer"
+                                    style={{ fontFamily: 'var(--font-ubuntu)' }}
+                                >
+                                    Report Link
+                                </button>
+                            </div>
                             
                             {/* Info Text */}
-                            <div className="text-center mt-8">
+                            <div className="text-center mt-4">
                                 <p 
                                     className="text-sm text-gray-500"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
                                 >
-                                    Short URL: <span className="font-mono text-[#467291]">lytn.it/{id}</span>
+                                    Short URL: <span className="font-mono text-[#467291]">{currentHost}/{id}</span>
                                 </p>
                             </div>
                         </div>
@@ -162,9 +208,19 @@ export default function LinkPreview({ id, destination, trackingData }: LinkPrevi
                 style={{ fontFamily: 'var(--font-ubuntu)' }}
             >
                 <div className="text-[11px] w-full text-center text-[#d4d4d4]">
-                    © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black">Vibe House LLC</a>
+                    © {currentYear} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black cursor-pointer">Vibe House LLC</a>
                 </div>
             </div>
+
+            {/* Report Modal */}
+            {showReportModal && (
+                <ReportLink
+                    lytnUrl={`https://${currentHost}/${id}`}
+                    shortId={id}
+                    onClose={() => setShowReportModal(false)}
+                    onSuccess={handleReportSuccess}
+                />
+            )}
         </div>
     );
 }

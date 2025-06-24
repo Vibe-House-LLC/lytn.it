@@ -17,7 +17,7 @@ export default function AuthButton() {
               {/* <h2 className="text-xl font-semibold">Sign In</h2> */}
               <button
                 onClick={() => setShowAuthenticator(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                className="text-gray-500 hover:text-gray-700 text-xl leading-none cursor-pointer"
               >
                 ✕
               </button>

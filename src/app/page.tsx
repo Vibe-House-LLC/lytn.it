@@ -1,7 +1,21 @@
+'use client';
+
+import { useState } from 'react';
 import ShortenUrl from '@/components/shorten-url';
 import AuthButton from '@/components/auth-button';
+import ReportLink from '@/components/report-link';
 
 export default function Home() {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+
+  const handleReportSuccess = () => {
+    setShowReportModal(false);
+    setReportSuccess(true);
+    // Hide success message after 5 seconds
+    setTimeout(() => setReportSuccess(false), 5000);
+  };
+
   return (
     <div className="min-h-screen bg-white overflow-hidden relative" style={{ minWidth: '400px' }}>
       {/* Header with Auth Button */}
@@ -46,9 +60,34 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Success Message */}
+              {reportSuccess && (
+                <div className="max-w-[1200px] mx-auto px-4 mb-4">
+                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                    <div className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Link reported successfully. Thank you for helping keep our community safe.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* URL Shortener Component */}
               <div id="content" className="mt-[15px] relative max-w-[1200px] w-full mx-auto">
                 <ShortenUrl />
+              </div>
+
+              {/* Report Abuse Link */}
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="text-red-600 hover:text-red-800 underline text-sm font-medium cursor-pointer"
+                  style={{ fontFamily: 'var(--font-ubuntu)' }}
+                >
+                  Report Abuse
+                </button>
               </div>
             </div>
           </div>
@@ -61,10 +100,18 @@ export default function Home() {
           style={{ fontFamily: 'var(--font-ubuntu)' }}
         >
           <div id="copyright" className="text-[11px] w-full text-center text-[#d4d4d4]">
-            © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black">Vibe House LLC</a>
+            © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black cursor-pointer">Vibe House LLC</a>
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <ReportLink
+          onClose={() => setShowReportModal(false)}
+          onSuccess={handleReportSuccess}
+        />
+      )}
     </div>
   );
 }
