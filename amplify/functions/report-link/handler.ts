@@ -3,7 +3,7 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '../../data/resource';
 // @ts-ignore
-import amplifyConfig from './amplify_outputs.json';
+import amplifyConfig from '../../../amplify_outputs.json';
 
 // Configure Amplify with the same configuration as the frontend
 Amplify.configure(amplifyConfig);

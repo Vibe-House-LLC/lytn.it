@@ -25,7 +25,11 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
   const isLytnUrl = (url: string): boolean => {
     try {
       const parsed = new URL(url);
-      return parsed.hostname === 'lytn.it' || parsed.hostname.endsWith('.lytn.it');
+      // Allow lytn.it domains and localhost for development
+      return parsed.hostname === 'lytn.it' || 
+             parsed.hostname.endsWith('.lytn.it') ||
+             parsed.hostname === 'localhost' ||
+             parsed.hostname === '127.0.0.1';
     } catch {
       return false;
     }
@@ -40,7 +44,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
     }
 
     if (!isLytnUrl(formData.lytnUrl)) {
-      setError('Please enter a valid lytn.it URL (e.g., https://lytn.it/abc123)');
+      setError('Please enter a valid shortened URL (e.g., https://lytn.it/abc123 or http://localhost:3000/abc123)');
       return;
     }
 
@@ -66,12 +70,26 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
         reporterEmail: formData.reporterEmail || '',
       });
 
-      if (result.data && typeof result.data === 'object' && 'success' in result.data && result.data.success) {
+      console.log('Report result:', result);
+      
+      // Parse the response if it's a JSON string
+      let parsedResponse;
+      if (typeof result.data === 'string') {
+        try {
+          parsedResponse = JSON.parse(result.data);
+        } catch {
+          parsedResponse = null;
+        }
+      } else {
+        parsedResponse = result.data;
+      }
+      
+      if (parsedResponse && typeof parsedResponse === 'object' && 'success' in parsedResponse && parsedResponse.success) {
         onSuccess?.();
       } else {
-        const errorMessage = result.data && typeof result.data === 'object' && 'message' in result.data 
-          ? String(result.data.message) 
-          : 'Failed to report link';
+        const errorMessage = parsedResponse && typeof parsedResponse === 'object' && 'message' in parsedResponse 
+          ? String(parsedResponse.message) 
+          : `Failed to report link. Response: ${JSON.stringify(result.data)}`;
         setError(errorMessage);
       }
     } catch (err) {
@@ -99,7 +117,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="lytnUrl" className="block text-sm font-medium text-gray-700 mb-1">
-              lytn.it URL to Report *
+              Shortened URL to Report *
             </label>
             <input
               type="url"
@@ -107,12 +125,14 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
               value={formData.lytnUrl}
               onChange={(e) => setFormData(prev => ({ ...prev, lytnUrl: e.target.value }))}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="https://lytn.it/abc123"
+              placeholder={typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+                ? `${window.location.origin}/abc123` 
+                : 'https://lytn.it/abc123'}
               required
               disabled={!!lytnUrl} // Disable if URL is pre-filled
             />
             <p className="text-xs text-gray-500 mt-1">
-              Enter the shortened lytn.it URL you want to report
+              Enter the shortened URL you want to report
             </p>
           </div>
 
