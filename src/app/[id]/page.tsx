@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { cookiesClient } from '@/utilities/amplify-utils';
 import LinkPreview from '@/components/link-preview';
 
 interface PageProps {
@@ -11,10 +10,28 @@ interface PageProps {
 
 async function getDestination(id: string): Promise<string | null> {
     try {
-        const response = await cookiesClient.models.shortenedUrl.get({ id });
-        return response.data?.destination || null;
+        console.log('Fetching destination for ID:', id);
+        
+        // Use the API route instead of direct database access
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/fetch-url?id=${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            console.error('API route error:', response.status, response.statusText);
+            return null;
+        }
+        
+        const data = await response.json();
+        console.log('API route result:', data);
+        
+        return data.destination || null;
     } catch (error) {
-        console.error('Error fetching destination:', error);
+        console.error('Error fetching destination for ID:', id);
+        console.error('Error details:', error);
         return null;
     }
 }

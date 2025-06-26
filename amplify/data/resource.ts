@@ -15,7 +15,7 @@ const schema = a.schema({
     url: a.string(),
   })
   .returns(a.string())
-  .authorization((allow) => [allow.guest()])
+  .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
   .handler(a.handler.function(shorten)),
 
   reportLink: a
@@ -27,7 +27,7 @@ const schema = a.schema({
       reporterEmail: a.string(),
     })
     .returns(a.json())
-    .authorization((allow) => [allow.guest()])
+    .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
     .handler(a.handler.function(reportLink)),
 
   shortenedUrl: a.model({
@@ -37,7 +37,11 @@ const schema = a.schema({
     ip: a.string(),
     createdAt: a.datetime(),
   })
-  .authorization((allow) => [allow.guest().to(['create', 'read'])]),
+  .authorization((allow) => [
+    allow.publicApiKey(),
+    allow.guest(),
+    allow.authenticated()
+  ]),
 
   reportedLink: a.model({
     id: a.id(),
@@ -52,7 +56,9 @@ const schema = a.schema({
     updatedAt: a.datetime(),
   })
   .authorization((allow) => [
+    allow.publicApiKey().to(['create', 'read', 'update', 'delete']),
     allow.guest().to(['create']),
+    allow.authenticated().to(['create', 'read', 'update', 'delete']), // Temporary: all authenticated users are admins
     allow.group('admins').to(['read', 'update', 'delete'])
   ]),
 
@@ -61,7 +67,11 @@ const schema = a.schema({
     seed: a.string(),
     iteration: a.integer(),
   })
-  .authorization((allow) => [allow.guest().to(['create', 'read', 'update'])])
+  .authorization((allow) => [
+    allow.publicApiKey().to(['create', 'read', 'update']),
+    allow.guest().to(['create', 'read', 'update']),
+    allow.authenticated().to(['create', 'read', 'update'])
+  ])
 
 });
 
@@ -70,7 +80,10 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'identityPool',
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
   },
 });
 

@@ -5,10 +5,12 @@ import type { Schema } from '../../data/resource';
 // @ts-ignore
 import amplifyConfig from '../../../amplify_outputs.json';
 
-// Configure Amplify with the same configuration as the frontend
+// Configure Amplify with the config file
 Amplify.configure(amplifyConfig);
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'apiKey'
+});
 
 export const handler: Handler = async (event, context) => {
   const { lytnUrl, shortId, reason, reporterEmail } = event.arguments;

@@ -4,12 +4,15 @@ import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '../../data/resource';
 import { generateId } from './vainId';
 // @ts-ignore
-import amplifyConfig from './amplify_outputs.json';
+import amplifyConfig from '../../../amplify_outputs.json';
 
-// Configure Amplify with the same configuration as the frontend
+// Configure Amplify with the config file
 Amplify.configure(amplifyConfig);
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'apiKey'
+});
+
 const SEED = 'lytnit';
 
 /**
@@ -42,31 +45,51 @@ function cleanUrl(url: string): string {
  */
 async function getIteration(): Promise<number> {
     try {
+        console.log('Getting iteration for seed:', SEED);
+        
         // Try to find existing iterator by seed
         const existing = await client.models.iterator.list({
             filter: { seed: { eq: SEED } }
         });
         
+        console.log('Existing iterators found:', existing.data?.length || 0);
+        console.log('Existing iterator data:', JSON.stringify(existing.data, null, 2));
+        
         if (existing.data && existing.data.length > 0) {
             // Update existing iterator
             const currentIterator = existing.data[0];
+            console.log('Current iterator:', currentIterator);
+            
+            const newIteration = (currentIterator.iteration || 0) + 1;
+            console.log('Updating iterator to iteration:', newIteration);
+            
             const updated = await client.models.iterator.update({
                 id: currentIterator.id,
                 seed: SEED,
-                iteration: (currentIterator.iteration || 0) + 1
+                iteration: newIteration
             });
+            
+            console.log('Updated iterator result:', JSON.stringify(updated, null, 2));
             return updated.data?.iteration || 1;
         } else {
             // Create new iterator
+            console.log('Creating new iterator with iteration 1');
             const created = await client.models.iterator.create({
                 seed: SEED,
                 iteration: 1
             });
+            
+            console.log('Created iterator result:', JSON.stringify(created, null, 2));
             return created.data?.iteration || 1;
         }
     } catch (error) {
         console.error('Error managing iteration:', error);
-        return Date.now() % 10000; // Fallback to timestamp-based
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Use a more random fallback
+        const fallback = Math.floor(Math.random() * 1000) + Date.now() % 10000;
+        console.log('Using fallback iteration:', fallback);
+        return fallback;
     }
 }
 
@@ -76,8 +99,14 @@ async function getIteration(): Promise<number> {
 async function hasConflict(id: string): Promise<boolean> {
     try {
         const result = await client.models.shortenedUrl.get({ id });
-        return !!result.data;
-    } catch {
+        const hasConflict = !!result.data;
+        console.log(`Conflict check for ID "${id}": ${hasConflict ? 'CONFLICT' : 'NO CONFLICT'}`);
+        if (hasConflict) {
+            console.log(`Existing record:`, result.data);
+        }
+        return hasConflict;
+    } catch (error) {
+        console.log(`Conflict check for ID "${id}": NO CONFLICT (error: ${error})`);
         return false;
     }
 }
@@ -108,22 +137,27 @@ export const handler: Handler = async (event, context) => {
         let attempts = 0;
         const maxAttempts = 10;
 
+        console.log(`Starting ID generation with max ${maxAttempts} attempts`);
         while (true) {
+            attempts++;
+            console.log(`Attempt ${attempts}/${maxAttempts}`);
+            
             const iteration = await getIteration();
             console.log('Got iteration:', iteration);
             
             generatedId = generateId(iteration, SEED);
             console.log('Generated ID:', generatedId);
             
-            if (!(await hasConflict(generatedId))) {
-                console.log(`No conflict with ${generatedId}`);
+            const conflict = await hasConflict(generatedId);
+            if (!conflict) {
+                console.log(`SUCCESS: No conflict with ${generatedId} after ${attempts} attempts`);
                 break;
             } else {
-                console.log(`Conflict with ${generatedId}, generating a new one.`);
-                attempts++;
+                console.log(`CONFLICT: ${generatedId} already exists, trying again...`);
                 
                 if (attempts >= maxAttempts) {
-                    throw new Error('Unable to generate unique ID after maximum attempts');
+                    console.error(`FAILED: Unable to generate unique ID after ${maxAttempts} attempts`);
+                    throw new Error(`Unable to generate unique ID after maximum attempts (${maxAttempts})`);
                 }
             }
         }
@@ -136,6 +170,13 @@ export const handler: Handler = async (event, context) => {
                         'unknown';
 
         console.log('Creating database record...');
+        console.log('Record data to create:', {
+            id: generatedId,
+            url: cleanedUrl,
+            destination: cleanedUrl,
+            ip: clientIp,
+            createdAt: new Date().toISOString()
+        });
         
         // Create shortened URL record
         const newRecord = await client.models.shortenedUrl.create({
@@ -146,13 +187,17 @@ export const handler: Handler = async (event, context) => {
             createdAt: new Date().toISOString()
         });
 
-        console.log('Database record created:', newRecord);
+        console.log('Database record created:', JSON.stringify(newRecord, null, 2));
+        console.log('newRecord.data:', newRecord.data);
+        console.log('newRecord.errors:', newRecord.errors);
 
         if (newRecord.data) {
             const result = generatedId;
             console.log('Returning result:', result);
             return result;
         } else {
+            console.error('Failed to create record - no data returned');
+            console.error('Full response:', JSON.stringify(newRecord, null, 2));
             throw new Error('Failed to create shortened URL record');
         }
 

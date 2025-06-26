@@ -79,16 +79,16 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <Link href="/" className="cursor-pointer">
-                                    <h1 
+                                <h1 
                                         className="text-[#467291] text-center leading-none mb-4 hover:text-[#5a8eb2] transition-colors"
-                                        style={{ 
-                                            fontFamily: 'var(--font-dosis)', 
-                                            fontSize: '80px',
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        lytn.it
-                                    </h1>
+                                    style={{ 
+                                        fontFamily: 'var(--font-dosis)', 
+                                        fontSize: '80px',
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    lytn.it
+                                </h1>
                                 </Link>
                                 <p 
                                     className="text-[#6e6e6e] text-lg"

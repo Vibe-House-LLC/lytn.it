@@ -98,6 +98,13 @@ function AuthenticatorWrapper({ onShowAuth }: { onShowAuth: () => void }) {
         <span className="text-sm text-gray-600 hidden sm:inline">
           {user.signInDetails?.loginId}
         </span>
+        <Button 
+          onClick={() => window.location.href = '/dashboard/admin'} 
+          variant="secondary" 
+          size="sm"
+        >
+          Admin
+        </Button>
         <Button onClick={signOut} variant="outline" size="sm">
           Sign Out
         </Button>
