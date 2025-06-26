@@ -1,5 +1,4 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
-import { reportLink } from '../functions/report-link/resource';
 import { vainId } from '../functions/vainId/resource';
 
 /*== STEP 1 ===============================================================
@@ -20,22 +19,6 @@ const schema = a.schema({
     .returns(a.ref('vainIdReturn'))
     .authorization((allow) => [allow.guest(), allow.authenticated()])
     .handler(a.handler.function(vainId)),
-
-  // This will end up being removed
-  reportLink: a
-    .mutation()
-    .arguments({
-      lytnUrl: a.string(),
-      shortId: a.string(),
-      reason: a.string(),
-      reporterEmail: a.string(),
-    })
-    .returns(a.json())
-    .authorization((allow) => [
-      allow.guest(),
-      allow.authenticated()
-    ])
-    .handler(a.handler.function(reportLink)),
 
   shortenedUrl: a.model({
     id: a.id().authorization(allow => [
