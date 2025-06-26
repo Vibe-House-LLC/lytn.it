@@ -20,7 +20,7 @@ async function getDestination(id: string): Promise<string | null> {
         const baseUrl = `${protocol}://${host}`;
         
         // Use the API route instead of direct database access
-        const response = await fetch(`${baseUrl}/api/fetch-url/?id=${id}`, {
+        const response = await fetch(`${baseUrl}/api/v2/links/?id=${id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

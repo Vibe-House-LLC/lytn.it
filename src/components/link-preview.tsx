@@ -43,6 +43,8 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
             });
         } catch (error) {
             console.error('Error tracking forward event:', error);
+        } finally {
+            setIsRedirecting(false);
         }
         
         // Redirect to the destination
