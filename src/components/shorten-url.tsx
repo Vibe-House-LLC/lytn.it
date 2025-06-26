@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
-import shortenUrl from "@/api/shortenUrl";
 
 export default function ShortenUrl() {
     const [url, setUrl] = useState('');
@@ -25,16 +24,24 @@ export default function ShortenUrl() {
         setShortenedUrl('');
 
         try {
-            const result = await shortenUrl(url.trim());
+            // const result = await shortenUrl(url.trim());
+
+            const response = await fetch('/api/v2/links', {
+                method: 'POST',
+                body: JSON.stringify({ url: url.trim() })
+            })
+
+            const result = await response.json();
+            const resultId = result?.id;
             
-            if (result) {
+            if (resultId) {
                 // Check if result is an error message from backend
-                if (result.startsWith('Error:')) {
-                    setError(result.replace('Error: ', ''));
+                if (resultId.startsWith('Error:')) {
+                    setError(resultId.replace('Error: ', ''));
                 } else {
                     // Use current origin to construct the full URL
                     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-                    setShortenedUrl(`${baseUrl}/${result}`);
+                    setShortenedUrl(`${baseUrl}/${resultId}`);
                 }
             } else {
                 setError('Failed to shorten URL. Please try again.');
