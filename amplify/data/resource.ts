@@ -49,11 +49,31 @@ const schema = a.schema({
     .handler(a.handler.function(reportLink)),
 
   shortenedUrl: a.model({
-    id: a.id(),
-    url: a.string(),
-    destination: a.string(),
-    ip: a.string(),
-    createdAt: a.datetime(),
+    id: a.id().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    url: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    destination: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    ip: a.string().authorization(allow => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.group('admins')
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
   })
   .authorization((allow) => [
     allow.guest().to(['create']),
