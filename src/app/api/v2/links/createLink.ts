@@ -61,7 +61,7 @@ export default async function createLink(url: string, clientIp?: string) {
         
         if (!url) {
             console.error('No URL provided');
-            return 'Error: URL parameter is required';
+            throw new Error('URL parameter is required');
         }
 
         console.log('Processing URL:', url);
@@ -71,7 +71,7 @@ export default async function createLink(url: string, clientIp?: string) {
         
         if (!meetsUrlRequirements(cleanedUrl)) {
             console.error('URL does not meet requirements:', cleanedUrl);
-            return 'Error: The link seems to be invalid...';
+            throw new Error('URL does not meet requirements');
         }
 
         // Generate unique ID using VainID algorithm
@@ -81,6 +81,8 @@ export default async function createLink(url: string, clientIp?: string) {
 
         console.log(`Starting ID generation with max ${maxAttempts} attempts`);
         while (true) {
+            attempts++;
+
             generatedId = (await client.queries.vainId({}))?.data?.id || '';
             
             const conflict = await hasConflict(generatedId);
@@ -94,7 +96,6 @@ export default async function createLink(url: string, clientIp?: string) {
                     console.error(`FAILED: Unable to generate unique ID after ${maxAttempts} attempts`);
                     throw new Error(`Unable to generate unique ID after maximum attempts (${maxAttempts})`);
                 }
-                attempts++;
             }
         }
 
