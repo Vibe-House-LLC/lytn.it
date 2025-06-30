@@ -1,12 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../amplify/data/resource';
-
-const client = generateClient<Schema>({
-  authMode: 'apiKey'
-});
 
 interface ReportLinkProps {
   lytnUrl?: string; // The lytn.it shortened URL
@@ -65,34 +59,24 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
         }
       }
 
-      const result = await client.mutations.reportLink({
-        lytnUrl: formData.lytnUrl,
-        shortId: extractedShortId,
-        reason: formData.reason || '',
-        reporterEmail: formData.reporterEmail || '',
-      });
+      // const result = await client.mutations.reportLink({
+      //   lytnUrl: formData.lytnUrl,
+      //   shortId: extractedShortId,
+      //   reason: formData.reason || '',
+      //   reporterEmail: formData.reporterEmail || '',
+      // });
+
+      const result = await (await fetch('/api/v2/report', {
+        method: 'POST',
+        body: JSON.stringify({ url: formData.lytnUrl, shortId: extractedShortId, reason: formData.reason, reporterEmail: formData.reporterEmail }),
+      })).json();
 
       console.log('Report result:', result);
       
-      // Parse the response if it's a JSON string
-      let parsedResponse;
-      if (typeof result.data === 'string') {
-        try {
-          parsedResponse = JSON.parse(result.data);
-        } catch {
-          parsedResponse = null;
-        }
-      } else {
-        parsedResponse = result.data;
-      }
-      
-      if (parsedResponse && typeof parsedResponse === 'object' && 'success' in parsedResponse && parsedResponse.success) {
+      if (result) {
         onSuccess?.();
       } else {
-        const errorMessage = parsedResponse && typeof parsedResponse === 'object' && 'message' in parsedResponse 
-          ? String(parsedResponse.message) 
-          : `Failed to report link. Response: ${JSON.stringify(result.data)}`;
-        setError(errorMessage);
+        setError('Failed to report link');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

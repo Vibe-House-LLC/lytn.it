@@ -7,7 +7,7 @@ import type { Schema } from '../../../../amplify/data/resource';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({ authMode: 'userPool' });
 
 // Define proper types based on the schema
 type ReportedLinkStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed';

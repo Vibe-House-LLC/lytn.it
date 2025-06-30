@@ -1,6 +1,5 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
-import { shorten } from '../functions/shorten/resource';
-import { reportLink } from '../functions/report-link/resource';
+import { vainId } from '../functions/vainId/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -9,38 +8,49 @@ specifies that any unauthenticated user can "create", "read", "update",
 and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
- shorten: a
-  .query()
-  .arguments({
-    url: a.string(),
-  })
-  .returns(a.string())
-  .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
-  .handler(a.handler.function(shorten)),
 
-  reportLink: a
-    .mutation()
-    .arguments({
-      lytnUrl: a.string(),
-      shortId: a.string(),
-      reason: a.string(),
-      reporterEmail: a.string(),
-    })
-    .returns(a.json())
-    .authorization((allow) => [allow.publicApiKey(), allow.guest(), allow.authenticated()])
-    .handler(a.handler.function(reportLink)),
+  vainIdReturn: a.customType({
+    id: a.string()
+  }),
+
+  vainId: a
+    .query()
+    .arguments({})
+    .returns(a.ref('vainIdReturn'))
+    .authorization((allow) => [allow.guest(), allow.authenticated()])
+    .handler(a.handler.function(vainId)),
 
   shortenedUrl: a.model({
-    id: a.id(),
-    url: a.string(),
-    destination: a.string(),
-    ip: a.string(),
-    createdAt: a.datetime(),
+    id: a.id().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    url: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    destination: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    ip: a.string().authorization(allow => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.group('admins')
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
   })
   .authorization((allow) => [
-    allow.publicApiKey(),
-    allow.guest(),
-    allow.authenticated()
+    allow.guest().to(['create']),
+    allow.authenticated().to(['create']),
+    allow.group('admins')
   ]),
 
   reportedLink: a.model({
@@ -56,10 +66,9 @@ const schema = a.schema({
     updatedAt: a.datetime(),
   })
   .authorization((allow) => [
-    allow.publicApiKey().to(['create', 'read', 'update', 'delete']),
     allow.guest().to(['create']),
-    allow.authenticated().to(['create', 'read', 'update', 'delete']), // Temporary: all authenticated users are admins
-    allow.group('admins').to(['read', 'update', 'delete'])
+    allow.authenticated().to(['create']),
+    allow.group('admins')
   ]),
 
   iterator: a.model({
@@ -68,22 +77,19 @@ const schema = a.schema({
     iteration: a.integer(),
   })
   .authorization((allow) => [
-    allow.publicApiKey().to(['create', 'read', 'update']),
-    allow.guest().to(['create', 'read', 'update']),
-    allow.authenticated().to(['create', 'read', 'update'])
+    allow.group('admins')
   ])
-
-});
+})
+.authorization((allow) => [
+  allow.resource(vainId)
+]);
 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'apiKey',
-    apiKeyAuthorizationMode: {
-      expiresInDays: 30,
-    },
+    defaultAuthorizationMode: 'identityPool'
   },
 });
 
@@ -92,7 +98,7 @@ Go to your frontend source code. From your client-side code, generate a
 Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
 WORK IN THE FRONTEND CODE FILE.)
 
-Using JavaScript or Next.js React Server Components, Middleware, Server 
+Using JavaScript or Next.js React Server Components, Middleware, Server
 Actions or Pages Router? Review how to generate Data clients for those use
 cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
 =========================================================================*/

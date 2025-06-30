@@ -12,8 +12,15 @@ async function getDestination(id: string): Promise<string | null> {
     try {
         console.log('Fetching destination for ID:', id);
         
+        // Get the current request headers to build the full URL
+        const headersList = await headers();
+        const host = headersList.get('host');
+        const protocol = headersList.get('x-forwarded-proto') || 
+                        (host?.includes('localhost') ? 'http' : 'https');
+        const baseUrl = `${protocol}://${host}`;
+        
         // Use the API route instead of direct database access
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/fetch-url?id=${id}`, {
+        const response = await fetch(`${baseUrl}/api/v2/links/?id=${id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
