@@ -40,6 +40,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
         } catch (error) {
             console.log('Error looking up shortened URL record:', error);
             console.log('Could not find shortened URL record for shortId:', shortId);
+            return null;
         }
     }
 }
