@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { vainId } from '../functions/vainId/resource';
+import { emailReportedLink } from '../functions/emailReportedLink/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -12,6 +13,25 @@ const schema = a.schema({
   vainIdReturn: a.customType({
     id: a.string()
   }),
+
+  emailReportedLinkInput: a.customType({
+    link: a.string(),
+    reason: a.string(),
+    reportedBy: a.string(),
+    reportedAt: a.datetime()
+  }),
+
+  emailReportedLinkOutput: a.customType({
+    message: a.json()
+  }),
+
+  emailReportedLink: a.query()
+    .arguments({
+      input: a.ref('emailReportedLinkInput')
+    })
+    .returns(a.ref('emailReportedLinkOutput'))
+    .authorization((allow) => [allow.guest(), allow.authenticated()])
+    .handler(a.handler.function(emailReportedLink)),
 
   vainId: a
     .query()
