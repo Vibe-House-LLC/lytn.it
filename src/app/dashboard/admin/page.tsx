@@ -17,12 +17,17 @@ interface ReportedLink {
   lytnUrl?: string | null;
   shortId?: string | null;
   destinationUrl?: string | null;
-  reason?: string | null;
+  reason?: 'spam' | 'malware' | 'phishing' | 'inappropriate_content' | 'copyright_violation' | 'fraud' | 'harassment' | 'other' | null;
   reporterEmail?: string | null;
   reporterIp?: string | null;
   status?: ReportedLinkStatus | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  // NEW FIELDS FROM UPDATED SCHEMA
+  deletedAt?: string | null;
+  deletedReason?: 'spam' | 'inappropriate_content' | 'copyright_violation' | 'user_request' | 'admin_action' | 'resolved' | null;
+  source?: 'user_reported' | 'admin_reported' | 'automated_scan' | 'external_api' | null;
+  owner?: string | null;
 }
 
 interface LoadingStates {

@@ -134,10 +134,12 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
             >
               <option value="">Select a reason</option>
               <option value="spam">Spam</option>
-              <option value="malware">Malware/Phishing</option>
-              <option value="inappropriate">Inappropriate Content</option>
-              <option value="copyright">Copyright Violation</option>
-              <option value="abuse">Abuse/Harassment</option>
+              <option value="malware">Malware</option>
+              <option value="phishing">Phishing</option>
+              <option value="inappropriate_content">Inappropriate Content</option>
+              <option value="copyright_violation">Copyright Violation</option>
+              <option value="fraud">Fraud</option>
+              <option value="harassment">Harassment</option>
               <option value="other">Other</option>
             </select>
           </div>

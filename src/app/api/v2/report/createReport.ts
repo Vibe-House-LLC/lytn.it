@@ -10,7 +10,7 @@ const client = generateClient<Schema>({ authMode: 'identityPool' });
 interface CreateReportParams {
     url: string;
     shortId: string;
-    reason: string;
+    reason: 'spam' | 'malware' | 'phishing' | 'inappropriate_content' | 'copyright_violation' | 'fraud' | 'harassment' | 'other';
     reporterEmail: string;
     clientIp?: string | undefined;
 }
@@ -29,7 +29,11 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                     destinationUrl: destinationUrl,
                     reason: reason,
                     reporterEmail: reporterEmail,
-                    reporterIp: clientIp
+                    reporterIp: clientIp,
+                    source: 'user_reported' as const,
+                    owner: reporterEmail,
+                    status: 'pending' as const,
+                    createdAt: new Date().toISOString()
                 }
                 const result = await client.models.reportedLink.create(data, { selectionSet: ['id', 'createdAt'] });
                 await client.queries.emailReportedLink({

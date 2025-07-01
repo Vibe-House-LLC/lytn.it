@@ -3,7 +3,8 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import {
     CognitoIdentityProviderClient,
     ListUsersInGroupCommand,
-    UserType
+    UserType,
+    AttributeType
 } from '@aws-sdk/client-cognito-identity-provider';
 import { env } from '$amplify/env/emailReportedLink'
 import { Schema } from '../../data/resource';
@@ -30,7 +31,7 @@ const listUsersInGroup = async () => {
 };
 
 const createUsersEmailsArray = (users: UserType[]) => {
-    return users.map((user) => user.Attributes?.find((attribute) => attribute.Name === 'email')?.Value).filter((email) => email !== undefined);
+    return users.map((user) => user.Attributes?.find((attribute: AttributeType) => attribute.Name === 'email')?.Value).filter((email) => email !== undefined);
 };
 
 const sendEmail = async (linkReport: LinkReport) => {

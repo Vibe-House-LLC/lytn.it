@@ -1,3 +1,7 @@
 {
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.840.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.840.0"
+  }
 }

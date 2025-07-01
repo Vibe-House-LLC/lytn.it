@@ -49,22 +49,44 @@ const schema = a.schema({
       allow.authenticated().to(['create', 'read']),
       allow.group('admins')
     ]),
-    url: a.string().authorization(allow => [
+    destination: a.url().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
       allow.group('admins')
     ]),
-    destination: a.string().authorization(allow => [
-      allow.guest().to(['create', 'read']),
-      allow.authenticated().to(['create', 'read']),
-      allow.group('admins')
-    ]),
-    ip: a.string().authorization(allow => [
+    ip: a.ipAddress().authorization(allow => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
       allow.group('admins')
     ]),
     createdAt: a.datetime().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+    deletedAt: a.datetime().authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins')
+    ]),
+    deletedReason: a.enum([
+      'spam',
+      'inappropriate_content', 
+      'copyright_violation',
+      'malware',
+      'user_request',
+      'terms_violation',
+      'admin_action',
+      'expired'
+    ]),
+    source: a.enum([
+      'user_created',
+      'imported', 
+      'admin_created',
+      'api_created',
+      'bulk_import'
+    ]),
+    owner: a.email().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
       allow.group('admins')
@@ -78,15 +100,40 @@ const schema = a.schema({
 
   reportedLink: a.model({
     id: a.id(),
-    lytnUrl: a.string(),
+    lytnUrl: a.url(),
     shortId: a.string(),
-    destinationUrl: a.string(),
-    reason: a.string(),
-    reporterEmail: a.string(),
-    reporterIp: a.string(),
+    destinationUrl: a.url(),
+    reason: a.enum([
+      'spam',
+      'malware',
+      'phishing',
+      'inappropriate_content',
+      'copyright_violation',
+      'fraud',
+      'harassment',
+      'other'
+    ]),
+    reporterEmail: a.email(),
+    reporterIp: a.ipAddress(),
     status: a.enum(['pending', 'reviewed', 'resolved', 'dismissed']),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
+    deletedAt: a.datetime(),
+    deletedReason: a.enum([
+      'spam',
+      'inappropriate_content',
+      'copyright_violation', 
+      'user_request',
+      'admin_action',
+      'resolved'
+    ]),
+    source: a.enum([
+      'user_reported',
+      'admin_reported', 
+      'automated_scan',
+      'external_api'
+    ]),
+    owner: a.email(),
   })
     .authorization((allow) => [
       allow.guest().to(['create']),

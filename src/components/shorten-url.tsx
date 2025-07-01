@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 export default function ShortenUrl() {
     const [url, setUrl] = useState('');
@@ -10,6 +11,9 @@ export default function ShortenUrl() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+    
+    // Get current user if authenticated
+    const { user } = useAuthenticator((context) => [context.user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,9 +30,22 @@ export default function ShortenUrl() {
         try {
             // const result = await shortenUrl(url.trim());
 
+            // Prepare payload with user email if authenticated
+            const payload: { url: string; userEmail?: string } = { 
+                url: url.trim() 
+            };
+            
+            // Add user email if user is authenticated
+            if (user?.signInDetails?.loginId) {
+                payload.userEmail = user.signInDetails.loginId;
+            }
+
             const response = await fetch('/api/v2/links', {
                 method: 'POST',
-                body: JSON.stringify({ url: url.trim() })
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
             })
 
             const result = await response.json();
