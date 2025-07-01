@@ -38,6 +38,12 @@ const sendEmail = async (linkReport: LinkReport) => {
 
     const usersEmails = await listUsersInGroup();
 
+    // Check if there are any admin users with email addresses
+    if (!usersEmails || usersEmails.length === 0) {
+        console.warn('No admin users with email addresses found in the "admins" group');
+        throw new Error('No admin users with email addresses found to send the report to');
+    }
+
     const textBody = `
     A link has been reported.\n
     Link: ${link}\n
