@@ -27,7 +27,10 @@ const schema = a.schema({
 
   emailReportedLink: a.query()
     .arguments({
-      input: a.ref('emailReportedLinkInput')
+      link: a.string().required(),
+      reason: a.string().required(),
+      reportedBy: a.string(),
+      reportedAt: a.datetime().required()
     })
     .returns(a.ref('emailReportedLinkOutput'))
     .authorization((allow) => [allow.guest(), allow.authenticated()])
@@ -67,11 +70,11 @@ const schema = a.schema({
       allow.group('admins')
     ]),
   })
-  .authorization((allow) => [
-    allow.guest().to(['create']),
-    allow.authenticated().to(['create']),
-    allow.group('admins')
-  ]),
+    .authorization((allow) => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.group('admins')
+    ]),
 
   reportedLink: a.model({
     id: a.id(),
@@ -85,24 +88,24 @@ const schema = a.schema({
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
   })
-  .authorization((allow) => [
-    allow.guest().to(['create']),
-    allow.authenticated().to(['create']),
-    allow.group('admins')
-  ]),
+    .authorization((allow) => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.group('admins')
+    ]),
 
   iterator: a.model({
     id: a.id(),
     seed: a.string(),
     iteration: a.integer(),
   })
-  .authorization((allow) => [
-    allow.group('admins')
-  ])
+    .authorization((allow) => [
+      allow.group('admins')
+    ])
 })
-.authorization((allow) => [
-  allow.resource(vainId)
-]);
+  .authorization((allow) => [
+    allow.resource(vainId)
+  ]);
 
 export type Schema = ClientSchema<typeof schema>;
 

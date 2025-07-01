@@ -5,15 +5,15 @@ import {
     ListUsersInGroupCommand,
     UserType
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { Handler } from 'aws-lambda';
 import { env } from '$amplify/env/emailReportedLink'
+import { Schema } from '../../data/resource';
 
 const client = new CognitoIdentityProviderClient();
 
 interface LinkReport {
     link: string;
     reason: string;
-    reportedBy: string;
+    reportedBy?: string;
     reportedAt: string;
 }
 
@@ -55,7 +55,7 @@ const sendEmail = async (linkReport: LinkReport) => {
     `;
 
     const command = new SendEmailCommand({
-        Source: process.env.SOURCE_ADDRESS,
+        Source: 'austin@vibehouse.net',
         Destination: {
             ToAddresses: usersEmails
         },
@@ -78,11 +78,11 @@ const sendEmail = async (linkReport: LinkReport) => {
 };
 
 // define the handler to process messages from the SNS topic and send via SES
-export const handler: Handler = async (event) => {
-    const { link, reason, reportedBy, reportedAt } = event.payload;
+export const handler: Schema['emailReportedLink']['functionHandler'] = async (event) => {
+    const { link, reason, reportedBy, reportedAt } = event.arguments;
     try {
-        const result = await sendEmail({ link, reason, reportedBy, reportedAt });
-        return result
+        await sendEmail({ link, reason, reportedBy: reportedBy || '', reportedAt });
+        return { message: "Email sent successfully" };
     } catch (error) {
         console.error(`Error sending email: ${error}`);
         throw new Error(`Failed to send email`, { cause: error });

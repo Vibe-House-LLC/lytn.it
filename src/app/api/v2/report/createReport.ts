@@ -31,7 +31,13 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                     reporterEmail: reporterEmail,
                     reporterIp: clientIp
                 }
-                const result = await client.models.reportedLink.create(data, { selectionSet: ['id'] });
+                const result = await client.models.reportedLink.create(data, { selectionSet: ['id', 'createdAt'] });
+                await client.queries.emailReportedLink({
+                        link: url,
+                        reason: reason,
+                        reportedBy: reporterEmail,
+                        reportedAt: new Date(result?.data?.createdAt || '').toISOString()
+                })
                 return result?.data?.id;
             } catch (error) {
                 console.error('Error creating report:', error);
