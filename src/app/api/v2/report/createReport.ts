@@ -36,7 +36,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                         link: url,
                         reason: reason,
                         reportedBy: reporterEmail,
-                        reportedAt: new Date(result?.data?.createdAt || '').toISOString()
+                        reportedAt: result?.data?.createdAt ? new Date(result?.data?.createdAt).toISOString() : new Date().toISOString()
                 })
                 return result?.data?.id;
             } catch (error) {
