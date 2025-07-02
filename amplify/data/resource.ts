@@ -47,27 +47,32 @@ const schema = a.schema({
     id: a.id().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
-      allow.group('admins')
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     destination: a.url().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
-      allow.group('admins')
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     ip: a.ipAddress().authorization(allow => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
-      allow.group('admins')
+      allow.group('admins'),
+      allow.owner().to(['create'])
     ]),
     createdAt: a.datetime().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
-      allow.group('admins')
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     deletedAt: a.datetime().authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
-      allow.group('admins')
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     deletedReason: a.enum([
       'spam',
@@ -75,26 +80,23 @@ const schema = a.schema({
       'copyright_violation',
       'malware',
       'user_request',
+      'user_deleted_link',
       'terms_violation',
       'admin_action',
       'expired'
     ]),
-    source: a.enum([
-      'user_created',
-      'imported', 
-      'admin_created',
-      'api_created',
-      'bulk_import'
+    source: a.string().authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
-    owner: a.email().authorization(allow => [
-      allow.guest().to(['create', 'read']),
-      allow.authenticated().to(['create', 'read']),
-      allow.group('admins')
-    ]),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete'])]),
   })
     .authorization((allow) => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
+      allow.owner().to(['create', 'read', 'update']),
       allow.group('admins')
     ]),
 
@@ -127,17 +129,13 @@ const schema = a.schema({
       'admin_action',
       'resolved'
     ]),
-    source: a.enum([
-      'user_reported',
-      'admin_reported', 
-      'automated_scan',
-      'external_api'
-    ]),
-    owner: a.email(),
+    source: a.string(),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete'])]),
   })
     .authorization((allow) => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
+      allow.owner().to(['create', 'read']),
       allow.group('admins')
     ]),
 
