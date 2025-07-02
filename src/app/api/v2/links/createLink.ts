@@ -175,11 +175,13 @@ export default async function createLink({ url, clientIp, source = 'user_created
             destination: cleanedUrl,
             createdAt: new Date().toISOString(),
             source,
+            status: 'active' as const,
         } as {
             id: string;
             destination: string;
             createdAt: string;
             source: 'user_created' | 'imported' | 'admin_created' | 'api_created' | 'bulk_import';
+            status: 'active' | 'reported' | 'inactive';
             ip?: string;
             owner?: string;
         };
