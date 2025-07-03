@@ -57,18 +57,8 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                 const result = await client.models.reportedLink.create(data, { selectionSet: ['id', 'createdAt'] });
                 console.log('Report creation result:', JSON.stringify(result, null, 2));
                 
-                // Update the shortened URL status to 'reported'
-                if (result.data?.id && shortId) {
-                    try {
-                        await client.models.shortenedUrl.update({
-                            id: shortId,
-                            status: 'reported'
-                        });
-                    } catch (updateError) {
-                        console.error('Error updating shortened URL status:', updateError);
-                        // Continue even if status update fails
-                    }
-                }
+                // Note: URL status is updated by admins only. 
+                // The 'reported' status is implicit by the existence of this report.
                 await client.queries.emailReportedLink({
                         link: url,
                         reason: reason,

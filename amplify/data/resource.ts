@@ -127,10 +127,10 @@ const schema = a.schema({
       allow.owner().to(['create', 'read'])
     ]),
     status: a.ref('UrlStatus').authorization(allow => [
-      allow.guest().to(['create', 'read', 'update']), // Safe because only createReport can update
-      allow.authenticated().to(['create', 'read', 'update']),
-      allow.group('admins'),
-      allow.owner().to(['create', 'read', 'update'])
+      allow.guest().to(['create', 'read']), // Guests can only read status
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'), // Only admins can update status
+      allow.owner().to(['create', 'read'])
     ]),
     source: a.string().authorization(allow => [
       allow.guest().to(['create', 'read']),
