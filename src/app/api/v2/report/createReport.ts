@@ -72,7 +72,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                 await client.queries.emailReportedLink({
                         link: url,
                         reason: reason,
-                        reportedBy: reporterEmail,
+                        reportedBy: validEmail,
                         reportedAt: result?.data?.createdAt ? new Date(result?.data?.createdAt).toISOString() : new Date().toISOString()
                 })
                 return result?.data?.id;

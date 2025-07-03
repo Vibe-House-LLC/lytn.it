@@ -96,7 +96,7 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete'])]),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete']), allow.group('admins')]),
     reports: a.hasMany('reportedLink', 'shortenedUrlId'),
   })
     .secondaryIndexes((index) => [

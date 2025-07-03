@@ -61,20 +61,7 @@ function cleanUrl(url: string): string {
     return url;
 }
 
-/**
- * Validate email format
- */
-function validateEmail(email?: string): string | undefined {
-    if (!email) return undefined;
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (emailRegex.test(email)) {
-        return email;
-    }
-    
-    console.log(`Invalid email format: ${email}, skipping owner field`);
-    return undefined;
-}
+
 
 /**
  * Check if an ID already exists
@@ -102,11 +89,9 @@ interface CreateLinkParams {
     url: string;
     clientIp?: string;
     source?: 'user_created' | 'imported' | 'admin_created' | 'api_created' | 'bulk_import';
-    owner?: string;
-    userEmail?: string; // Add userEmail for tracking authenticated users
 }
 
-export default async function createLink({ url, clientIp, source = 'user_created', owner, userEmail }: CreateLinkParams): Promise<string> {
+export default async function createLink({ url, clientIp, source = 'user_created' }: CreateLinkParams): Promise<string> {
     try {
         console.log('Shorten handler called with event:', JSON.stringify(url, null, 2));
         
@@ -116,7 +101,6 @@ export default async function createLink({ url, clientIp, source = 'user_created
         }
 
         console.log('Processing URL:', url);
-        console.log('User Email:', userEmail);
         console.log('Client IP:', clientIp);
 
         const cleanedUrl = cleanUrl(url);
@@ -156,18 +140,10 @@ export default async function createLink({ url, clientIp, source = 'user_created
 
         // Validate optional fields
         const validatedIp = validateIpAddress(clientIp);
-        
-        // For authenticated users, prefer userEmail, fallback to owner
-        // For guests, owner will be undefined anyway
-        const emailToUse = userEmail || owner;
-        const validatedOwner = validateEmail(emailToUse);
 
         // Log tracking info for debugging
-        if (userEmail) {
-            console.log(`Authenticated user: ${userEmail}, IP: ${validatedIp || 'invalid'}`);
-        } else {
-            console.log(`Guest user, IP: ${validatedIp || 'invalid'}`);
-        }
+        console.log(`Creating link with IP: ${validatedIp || 'invalid'}`);
+        // Note: Owner field will be automatically populated by AWS AppSync based on authenticated user context
 
         // Prepare record data - only include fields that pass validation
         const recordData = {
@@ -191,10 +167,7 @@ export default async function createLink({ url, clientIp, source = 'user_created
             recordData.ip = validatedIp;
         }
         
-        // Add owner email for authenticated users
-        if (validatedOwner) {
-            recordData.owner = validatedOwner;
-        }
+        // Owner field will be automatically populated by AWS AppSync based on authenticated user context
 
         console.log('Creating database record...');
         console.log('Record data to create:', recordData);
