@@ -25,6 +25,52 @@ const schema = a.schema({
     message: a.json()
   }),
 
+  // Define all enums with proper authorization
+  UrlStatus: a.enum([
+    'active',
+    'reported',
+    'inactive',
+  ]),
+
+  ReportStatus: a.enum([
+    'pending', 
+    'reviewed', 
+    'resolved', 
+    'dismissed'
+  ]),
+
+  DeletionReason: a.enum([
+    'spam',
+    'inappropriate_content', 
+    'copyright_violation',
+    'malware',
+    'user_request',
+    'user_deleted_link',
+    'terms_violation',
+    'admin_action',
+    'expired'
+  ]),
+
+  ReportReason: a.enum([
+    'spam',
+    'malware',
+    'phishing',
+    'inappropriate_content',
+    'copyright_violation',
+    'fraud',
+    'harassment',
+    'other'
+  ]),
+
+  ReportDeletionReason: a.enum([
+    'spam',
+    'inappropriate_content',
+    'copyright_violation', 
+    'user_request',
+    'admin_action',
+    'resolved'
+  ]),
+
   emailReportedLink: a.query()
     .arguments({
       link: a.string().required(),
@@ -74,21 +120,17 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    deletedReason: a.enum([
-      'spam',
-      'inappropriate_content', 
-      'copyright_violation',
-      'malware',
-      'user_request',
-      'user_deleted_link',
-      'terms_violation',
-      'admin_action',
-      'expired'
+    deletedReason: a.ref('DeletionReason').authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
-    status: a.enum([
-      'active',
-      'reported',
-      'inactive',
+    status: a.ref('UrlStatus').authorization(allow => [
+      allow.guest().to(['create', 'read', 'update']), // Safe because only createReport can update
+      allow.authenticated().to(['create', 'read', 'update']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read', 'update'])
     ]),
     source: a.string().authorization(allow => [
       allow.guest().to(['create', 'read']),
@@ -137,15 +179,11 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    reason: a.enum([
-      'spam',
-      'malware',
-      'phishing',
-      'inappropriate_content',
-      'copyright_violation',
-      'fraud',
-      'harassment',
-      'other'
+    reason: a.ref('ReportReason').authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     reporterEmail: a.email().authorization(allow => [
       allow.guest().to(['create', 'read']),
@@ -159,7 +197,12 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create'])
     ]),
-    status: a.enum(['pending', 'reviewed', 'resolved', 'dismissed']),
+    status: a.ref('ReportStatus').authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read', 'update'])
+    ]),
     createdAt: a.datetime().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
@@ -178,13 +221,11 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read', 'update'])
     ]),
-    deletedReason: a.enum([
-      'spam',
-      'inappropriate_content',
-      'copyright_violation', 
-      'user_request',
-      'admin_action',
-      'resolved'
+    deletedReason: a.ref('ReportDeletionReason').authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
     source: a.string().authorization(allow => [
       allow.guest().to(['create', 'read']),
