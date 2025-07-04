@@ -74,18 +74,6 @@ export default async function createReport({ url, shortId, reason, reporterEmail
             console.log('Error looking up shortened URL record:', error);
             console.log('Could not find shortened URL record for shortId:', shortId);
             
-            // Debug: List existing shortened URLs to see what's available
-            try {
-                console.log('Attempting to list existing shortened URLs for debugging...');
-                const existingUrls = await client.models.shortenedUrl.list({ 
-                    limit: 10,
-                    selectionSet: ['id', 'destination', 'status', 'createdAt']
-                });
-                console.log('Existing shortened URLs in database:', JSON.stringify(existingUrls, null, 2));
-            } catch (debugError) {
-                console.error('Debug query failed:', debugError);
-            }
-            
             return null;
         }
     }
