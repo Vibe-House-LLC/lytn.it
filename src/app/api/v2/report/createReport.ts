@@ -48,10 +48,10 @@ export default async function createReport({ url, shortId, reason, reporterEmail
         console.log('Found destination URL:', destinationUrl);
         
         try {
-            // Handle email validation - use provided email or anonymous placeholder
+            // Handle email validation - use provided email or return null
             const validEmail = reporterEmail && reporterEmail.trim() && isValidEmail(reporterEmail.trim()) 
                 ? reporterEmail.trim() 
-                : 'anonymous@example.com';
+                : 'null';
 
             const data = {
                 lytnUrl: url,
@@ -61,17 +61,14 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                 reporterEmail: validEmail,
                 reporterIp: clientIp,
                 source: 'user_reported' as const,
-                owner: validEmail,
                 status: 'pending' as const,
                 createdAt: new Date().toISOString(),
-                shortenedUrlId: shortId, // Link to the shortened URL
+                shortenedUrlId: shortId,
             }
             console.log('Creating reportedLink with data:', JSON.stringify(data, null, 2));
             const result = await client.models.reportedLink.create(data, { selectionSet: ['id', 'createdAt'] });
             console.log('Report creation result:', JSON.stringify(result, null, 2));
             
-            // Note: URL status is updated by admins only. 
-            // The 'reported' status is implicit by the existence of this report.
             await client.queries.emailReportedLink({
                     link: url,
                     reason: reason,
