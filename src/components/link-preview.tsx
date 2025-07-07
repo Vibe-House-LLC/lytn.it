@@ -114,16 +114,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
 
                             {/* URL Preview Card */}
                             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-                                <div className="flex items-center mb-4">
-                                    <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                                    <span 
-                                        className="text-green-600 font-medium"
-                                        style={{ fontFamily: 'var(--font-ubuntu)' }}
-                                    >
-                                        Secure Connection
-                                    </span>
-                                </div>
-                                
+                                                               
                                 <div className="mb-4">
                                     <p 
                                         className="text-sm text-gray-600 mb-2"
