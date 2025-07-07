@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 import { trackForward } from '@/lib/tracking';
 import ReportLink from './report-link';
 
@@ -16,11 +15,15 @@ interface LinkPreviewProps {
 }
 
 export default function LinkPreview({ id, destination, trackingData, host = 'this domain' }: LinkPreviewProps) {
-    const [isRedirecting, setIsRedirecting] = useState(false);
     const [currentHost, setCurrentHost] = useState(host);
     const [currentYear, setCurrentYear] = useState(2024);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportSuccess, setReportSuccess] = useState(false);
+    const [showFullUrl, setShowFullUrl] = useState(false);
+    const [countdown, setCountdown] = useState(10);
+    const [autoforwardEnabled, setAutoforwardEnabled] = useState(true);
+    const [isTextTruncated, setIsTextTruncated] = useState(false);
+    const urlTextRef = useRef<HTMLParagraphElement>(null);
 
     // Handle client-side only content to prevent hydration issues
     useEffect(() => {
@@ -30,9 +33,30 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         }
     }, []);
 
-    const handleContinue = async () => {
-        setIsRedirecting(true);
-        
+    // Check if text is truncated
+    useEffect(() => {
+        if (urlTextRef.current && !showFullUrl) {
+            const element = urlTextRef.current;
+            setIsTextTruncated(element.scrollWidth > element.clientWidth);
+        } else {
+            setIsTextTruncated(false);
+        }
+    }, [destination, showFullUrl]);
+
+    // Countdown timer for auto-forwarding
+    useEffect(() => {
+        if (countdown > 0 && autoforwardEnabled) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (countdown === 0 && autoforwardEnabled) {
+            // Auto-forward when countdown reaches 0
+            handleDestinationClick();
+        }
+    }, [countdown, autoforwardEnabled]);
+
+    const handleDestinationClick = async () => {
         // Track the forward event
         try {
             await trackForward({
@@ -43,11 +67,8 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
             });
         } catch (error) {
             console.error('Error tracking forward event:', error);
-        } finally {
-            setIsRedirecting(false);
         }
         
-        // Redirect to the destination
         window.location.href = destination;
     };
 
@@ -56,15 +77,6 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         setReportSuccess(true);
         // Hide success message after 5 seconds
         setTimeout(() => setReportSuccess(false), 5000);
-    };
-
-    // Extract domain from URL for display
-    const getDomain = (url: string) => {
-        try {
-            return new URL(url).hostname;
-        } catch {
-            return url;
-        }
     };
 
     return (
@@ -79,25 +91,38 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                     >
                         <div className="max-w-2xl mx-auto px-6">
                             {/* Logo */}
-                            <div className="text-center mb-8">
-                                <Link href="/" className="cursor-pointer">
+                            <div className="text-center mb-4">
                                 <h1 
                                         className="text-[#467291] text-center leading-none mb-4 hover:text-[#5a8eb2] transition-colors"
                                     style={{ 
                                         fontFamily: 'var(--font-dosis)', 
-                                        fontSize: '80px',
+                                        fontSize: '64px',
                                         fontWeight: 600,
                                     }}
                                 >
-                                    lytn.it
+                                    lytn.it/{id}
                                 </h1>
-                                </Link>
                                 <p 
-                                    className="text-[#6e6e6e] text-lg"
+                                    className="text-[#6e6e6e] text-sm mb-2"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
                                 >
-                                    You&apos;re about to visit:
+                                    forwards to
                                 </p>
+                                <div className="flex justify-center mb-2">
+                                    <svg 
+                                        className="w-8 h-8 text-[#467291]" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            strokeWidth={2} 
+                                            d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+                                        />
+                                    </svg>
+                                </div>
                             </div>
 
                             {/* Success Message */}
@@ -112,84 +137,92 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                 </div>
                             )}
 
-                            {/* URL Preview Card */}
-                            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
-                                                               
-                                <div className="mb-4">
-                                    <p 
-                                        className="text-sm text-gray-600 mb-2"
-                                        style={{ fontFamily: 'var(--font-ubuntu)' }}
+                                                        {/* Destination URL Card */}
+                            <div className="mb-8 flex justify-center">
+                                <div className="bg-gray-100 p-3 hover:bg-gray-200 transition-all cursor-pointer max-w-lg min-w-0">
+                                    <div 
+                                        onClick={handleDestinationClick}
+                                        className="cursor-pointer min-w-0"
                                     >
-                                        Destination:
-                                    </p>
-                                    <p 
-                                        className="text-lg font-medium text-[#467291] break-all"
-                                        style={{ fontFamily: 'var(--font-ubuntu-mono)' }}
-                                    >
-                                        {getDomain(destination)}
-                                    </p>
-                                </div>
-                                
-                                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded border-l-4 border-gray-300">
-                                    <p 
-                                        className="font-mono break-all"
-                                        style={{ fontFamily: 'var(--font-ubuntu-mono)' }}
-                                    >
-                                        {destination}
-                                    </p>
+                                        <p 
+                                            ref={urlTextRef}
+                                            className={`text-lg font-medium text-gray-700 min-w-0 ${showFullUrl ? 'break-all' : 'truncate'}`}
+                                            style={{ fontFamily: 'var(--font-ubuntu-mono)' }}
+                                        >
+                                            {destination}
+                                        </p>
+                                    </div>
+                                    {(isTextTruncated || showFullUrl) && (
+                                        <div className="flex justify-end mt-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowFullUrl(!showFullUrl);
+                                                }}
+                                                className="text-xs text-[#467291] hover:text-[#5a8eb2] flex items-center gap-1"
+                                                style={{ fontFamily: 'var(--font-ubuntu)' }}
+                                            >
+                                                {showFullUrl ? 'Show less' : 'Show full URL'}
+                                                <svg 
+                                                    className="w-3 h-3" 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path 
+                                                        strokeLinecap="round" 
+                                                        strokeLinejoin="round" 
+                                                        strokeWidth={2} 
+                                                        d={showFullUrl ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <button
-                                    onClick={handleContinue}
-                                    disabled={isRedirecting}
-                                    className="bg-[#467291] text-white px-8 py-3 rounded-md hover:bg-[#365a73] transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                    style={{ fontFamily: 'var(--font-ubuntu)' }}
-                                >
-                                    {isRedirecting ? (
-                                        <span className="flex items-center justify-center">
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Redirecting...
-                                        </span>
-                                    ) : (
-                                        'Continue to Site'
-                                    )}
-                                </button>
-                                
-                                <Link
-                                    href="/"
-                                    className="bg-gray-100 text-gray-700 px-8 py-3 rounded-md hover:bg-gray-200 transition-colors font-medium text-lg text-center cursor-pointer"
-                                    style={{ fontFamily: 'var(--font-ubuntu)' }}
-                                >
-                                    Create New Link
-                                </Link>
+                            {/* Auto-forwarding countdown */}
+                            <div className="text-center mb-4">
+                                <div className="flex items-center justify-center gap-1">
+                                    <input 
+                                        type="checkbox"
+                                        id="autoforward-checkbox"
+                                        checked={autoforwardEnabled}
+                                        onChange={(e) => setAutoforwardEnabled(e.target.checked)}
+                                        className="cursor-pointer"
+                                    />
+                                    <label 
+                                        htmlFor="autoforward-checkbox"
+                                        className="text-sm text-gray-600 cursor-pointer leading-none"
+                                        style={{ fontFamily: 'var(--font-ubuntu)', fontWeight: 600 }}
+                                    >
+                                        {autoforwardEnabled 
+                                            ? `Auto-redirect (${countdown}s) —` 
+                                            : 'Auto-redirect —'
+                                        }
+                                    </label>
+                                    <button
+                                        onClick={handleDestinationClick}
+                                        className="text-[#467291] hover:text-[#5a8eb2] underline cursor-pointer text-sm leading-none flex items-center"
+                                        style={{ fontFamily: 'var(--font-ubuntu)', fontWeight: 600 }}
+                                    >
+                                        {autoforwardEnabled ? 'Skip Wait' : 'Forward Now'}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Report Link Button */}
-                            <div className="text-center mt-6">
+                            <div className="text-center">
                                 <button
                                     onClick={() => setShowReportModal(true)}
                                     className="text-red-600 hover:text-red-800 underline text-sm font-medium cursor-pointer"
                                     style={{ fontFamily: 'var(--font-ubuntu)' }}
                                 >
-                                    Report Link
+                                    Report Abuse
                                 </button>
                             </div>
                             
-                            {/* Info Text */}
-                            <div className="text-center mt-4">
-                                <p 
-                                    className="text-sm text-gray-500"
-                                    style={{ fontFamily: 'var(--font-ubuntu)' }}
-                                >
-                                    Short URL: <span className="font-mono text-[#467291]">{currentHost}/{id}</span>
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
