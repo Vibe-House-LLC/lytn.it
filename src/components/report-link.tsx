@@ -66,17 +66,35 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
       //   reporterEmail: formData.reporterEmail || '',
       // });
 
-      const result = await (await fetch('/api/v2/report', {
+      const response = await fetch('/api/v2/report', {
         method: 'POST',
-        body: JSON.stringify({ url: formData.lytnUrl, shortId: extractedShortId, reason: formData.reason, reporterEmail: formData.reporterEmail }),
-      })).json();
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          url: formData.lytnUrl, 
+          shortId: extractedShortId, 
+          reason: formData.reason, 
+          reporterEmail: formData.reporterEmail 
+        }),
+      });
 
+      const result = await response.json();
       console.log('Report result:', result);
       
-      if (result) {
+      if (response.ok && result && result.id) {
+        // Successfully created report
+        console.log('Report created with ID:', result.id);
         onSuccess?.();
       } else {
-        setError('Failed to report link');
+        // Handle different error cases
+        if (result.error) {
+          setError(result.error);
+        } else if (!response.ok) {
+          setError(`Failed to report link: ${response.status} ${response.statusText}`);
+        } else {
+          setError('Failed to report link - no report ID returned');
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

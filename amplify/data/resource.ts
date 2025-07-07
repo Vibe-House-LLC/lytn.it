@@ -25,6 +25,52 @@ const schema = a.schema({
     message: a.json()
   }),
 
+  // Define all enums with proper authorization
+  UrlStatus: a.enum([
+    'active',
+    'reported',
+    'inactive',
+  ]),
+
+  ReportStatus: a.enum([
+    'pending', 
+    'reviewed', 
+    'resolved', 
+    'dismissed'
+  ]),
+
+  DeletionReason: a.enum([
+    'spam',
+    'inappropriate_content', 
+    'copyright_violation',
+    'malware',
+    'user_request',
+    'user_deleted_link',
+    'terms_violation',
+    'admin_action',
+    'expired'
+  ]),
+
+  ReportReason: a.enum([
+    'spam',
+    'malware',
+    'phishing',
+    'inappropriate_content',
+    'copyright_violation',
+    'fraud',
+    'harassment',
+    'other'
+  ]),
+
+  ReportDeletionReason: a.enum([
+    'spam',
+    'inappropriate_content',
+    'copyright_violation', 
+    'user_request',
+    'admin_action',
+    'resolved'
+  ]),
+
   emailReportedLink: a.query()
     .arguments({
       link: a.string().required(),
@@ -74,25 +120,33 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    deletedReason: a.enum([
-      'spam',
-      'inappropriate_content', 
-      'copyright_violation',
-      'malware',
-      'user_request',
-      'user_deleted_link',
-      'terms_violation',
-      'admin_action',
-      'expired'
-    ]),
-    source: a.string().authorization(allow => [
+    deletedReason: a.ref('DeletionReason').authorization(allow => [
       allow.guest().to(['read']),
       allow.authenticated().to(['read']),
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete'])]),
+    status: a.ref('UrlStatus').authorization(allow => [
+      allow.guest().to(['create', 'read']), // Guests can only read status
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'), // Only admins can update status
+      allow.owner().to(['create', 'read'])
+    ]),
+    source: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete']), allow.group('admins')]),
+    reports: a.hasMany('reportedLink', 'shortenedUrlId'),
   })
+    .secondaryIndexes((index) => [
+      index("owner").sortKeys(["createdAt"]),
+      index("status").sortKeys(["createdAt"]),
+      index("source").sortKeys(["createdAt"]),
+      index("ip").sortKeys(["createdAt"]),
+    ])
     .authorization((allow) => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
@@ -101,37 +155,104 @@ const schema = a.schema({
     ]),
 
   reportedLink: a.model({
-    id: a.id(),
-    lytnUrl: a.url(),
-    shortId: a.string(),
-    destinationUrl: a.url(),
-    reason: a.enum([
-      'spam',
-      'malware',
-      'phishing',
-      'inappropriate_content',
-      'copyright_violation',
-      'fraud',
-      'harassment',
-      'other'
+    id: a.id().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
-    reporterEmail: a.email(),
-    reporterIp: a.ipAddress(),
-    status: a.enum(['pending', 'reviewed', 'resolved', 'dismissed']),
-    createdAt: a.datetime(),
-    updatedAt: a.datetime(),
-    deletedAt: a.datetime(),
-    deletedReason: a.enum([
-      'spam',
-      'inappropriate_content',
-      'copyright_violation', 
-      'user_request',
-      'admin_action',
-      'resolved'
+    lytnUrl: a.url().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
     ]),
-    source: a.string(),
-    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete'])]),
+    shortId: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    destinationUrl: a.url().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    reason: a.ref('ReportReason').authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    reporterEmail: a.email().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    reporterIp: a.ipAddress().authorization(allow => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.group('admins'),
+      allow.owner().to(['create'])
+    ]),
+    status: a.ref('ReportStatus').authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read', 'update'])
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    updatedAt: a.datetime().authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read', 'update'])
+    ]),
+    deletedAt: a.datetime().authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read', 'update'])
+    ]),
+    deletedReason: a.ref('ReportDeletionReason').authorization(allow => [
+      allow.guest().to(['read']),
+      allow.authenticated().to(['read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    source: a.string().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    owner: a.string().authorization(allow => [
+      allow.guest().to(['create']),
+      allow.authenticated().to(['create']),
+      allow.owner().to(['read', 'delete']),
+      allow.group('admins')
+    ]),
+    shortenedUrlId: a.id().authorization(allow => [
+      allow.guest().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read']),
+      allow.group('admins'),
+      allow.owner().to(['create', 'read'])
+    ]),
+    shortenedUrl: a.belongsTo('shortenedUrl', 'shortenedUrlId'),
   })
+    .secondaryIndexes((index) => [
+      index("reporterEmail").sortKeys(["createdAt"]),
+      index("status").sortKeys(["createdAt"]),
+      index("reason").sortKeys(["createdAt"]),
+      index("shortenedUrlId").sortKeys(["createdAt"]),
+    ])
     .authorization((allow) => [
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
