@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Dosis, Roboto_Condensed, Ubuntu, Ubuntu_Mono } from "next/font/google";
 import "./globals.css";
 import AmplifySetup from "@/utilities/amplifySetup";
+import Navigation from "@/components/navigation";
 
 const dosis = Dosis({
   variable: "--font-dosis",
@@ -48,6 +49,7 @@ export default function RootLayout({
       <body
         className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
       >
+        <Navigation />
         {children}
       </body>
     </html>

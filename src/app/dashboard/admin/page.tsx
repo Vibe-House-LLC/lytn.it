@@ -151,7 +151,7 @@ export default function AdminDashboard() {
   // For now, all authenticated users are treated as admins
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
           <p className="text-gray-600">Please sign in to access the admin dashboard.</p>
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-600">Manage reported links and review user reports</p>
