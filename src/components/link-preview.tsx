@@ -30,6 +30,12 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         if (typeof window !== 'undefined') {
             setCurrentHost(window.location.host);
             setCurrentYear(new Date().getFullYear());
+            
+            // Load autoforward preference from localStorage
+            const savedAutoforward = localStorage.getItem('lytn-autoforward-enabled');
+            if (savedAutoforward !== null) {
+                setAutoforwardEnabled(JSON.parse(savedAutoforward));
+            }
         }
     }, []);
 
@@ -55,6 +61,15 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
             handleDestinationClick();
         }
     }, [countdown, autoforwardEnabled]);
+
+    // Save autoforward preference to localStorage whenever it changes
+    const handleAutoforwardToggle = (enabled: boolean) => {
+        setAutoforwardEnabled(enabled);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('lytn-autoforward-enabled', JSON.stringify(enabled));
+            console.log('Autoforward preference saved:', enabled);
+        }
+    };
 
     const handleDestinationClick = async () => {
         // Track the forward event
@@ -89,28 +104,22 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             top: '50%',
                         }}
                     >
-                        <div className="max-w-2xl mx-auto px-6">
+                        <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
-                            <div className="text-center mb-4">
+                            <div className="text-center mb-8">
                                 <h1 
-                                        className="text-[#467291] text-center leading-none mb-4 hover:text-[#5a8eb2] transition-colors"
+                                        className="text-[#467291] text-center leading-none mb-6 hover:text-[#5a8eb2] transition-colors"
                                     style={{ 
                                         fontFamily: 'var(--font-dosis)', 
-                                        fontSize: '64px',
+                                        fontSize: '150px',
                                         fontWeight: 600,
                                     }}
                                 >
                                     lytn.it/{id}
                                 </h1>
-                                <p 
-                                    className="text-[#6e6e6e] text-sm mb-2"
-                                    style={{ fontFamily: 'var(--font-ubuntu)' }}
-                                >
-                                    forwards to
-                                </p>
-                                <div className="flex justify-center mb-2">
+                                <div className="flex justify-center mb-4">
                                     <svg 
-                                        className="w-8 h-8 text-[#467291]" 
+                                        className="w-12 h-12 text-[#467291]" 
                                         fill="none" 
                                         stroke="currentColor" 
                                         viewBox="0 0 24 24"
@@ -118,7 +127,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                         <path 
                                             strokeLinecap="round" 
                                             strokeLinejoin="round" 
-                                            strokeWidth={2} 
+                                            strokeWidth={3} 
                                             d="M19 14l-7 7m0 0l-7-7m7 7V3" 
                                         />
                                     </svg>
@@ -128,7 +137,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             {/* Success Message */}
                             {reportSuccess && (
                                 <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
-                                    <div className="flex items-center">
+                                    <div className="flex items-center justify-center">
                                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                         </svg>
@@ -138,33 +147,42 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             )}
 
                                                         {/* Destination URL Card */}
-                            <div className="mb-8 flex justify-center">
-                                <div className="bg-gray-100 p-3 hover:bg-gray-200 transition-all cursor-pointer max-w-lg min-w-0">
+                            <div className="mb-12 flex justify-center">
+                                <div className="bg-gray-100 px-6 py-3 hover:bg-gray-200 transition-all cursor-pointer max-w-2xl min-w-0">
+                                    {/* Redirects to label */}
+                                    <div className="mb-3">
+                                        <span 
+                                            className="text-sm text-gray-500 font-medium"
+                                            style={{ fontFamily: 'var(--font-ubuntu)' }}
+                                        >
+                                            Redirects to:
+                                        </span>
+                                    </div>
                                     <div 
                                         onClick={handleDestinationClick}
                                         className="cursor-pointer min-w-0"
                                     >
                                         <p 
                                             ref={urlTextRef}
-                                            className={`text-lg font-medium text-gray-700 min-w-0 ${showFullUrl ? 'break-all' : 'truncate'}`}
+                                            className={`text-xl font-medium text-gray-700 min-w-0 ${showFullUrl ? 'break-all' : 'truncate'}`}
                                             style={{ fontFamily: 'var(--font-ubuntu-mono)' }}
                                         >
                                             {destination}
                                         </p>
                                     </div>
                                     {(isTextTruncated || showFullUrl) && (
-                                        <div className="flex justify-end mt-2">
+                                        <div className="flex justify-end mt-3">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setShowFullUrl(!showFullUrl);
                                                 }}
-                                                className="text-xs text-[#467291] hover:text-[#5a8eb2] flex items-center gap-1"
+                                                className="text-sm text-[#467291] hover:text-[#5a8eb2] flex items-center gap-1"
                                                 style={{ fontFamily: 'var(--font-ubuntu)' }}
                                             >
                                                 {showFullUrl ? 'Show less' : 'Show full URL'}
                                                 <svg 
-                                                    className="w-3 h-3" 
+                                                    className="w-4 h-4" 
                                                     fill="none" 
                                                     stroke="currentColor" 
                                                     viewBox="0 0 24 24"
@@ -183,14 +201,14 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             </div>
 
                             {/* Auto-forwarding countdown */}
-                            <div className="text-center mb-4">
-                                <div className="flex items-center justify-center gap-1">
+                            <div className="text-center mb-6">
+                                <div className="flex items-center justify-center gap-2">
                                     <input 
                                         type="checkbox"
                                         id="autoforward-checkbox"
                                         checked={autoforwardEnabled}
-                                        onChange={(e) => setAutoforwardEnabled(e.target.checked)}
-                                        className="cursor-pointer"
+                                        onChange={(e) => handleAutoforwardToggle(e.target.checked)}
+                                        className="cursor-pointer w-4 h-4"
                                     />
                                     <label 
                                         htmlFor="autoforward-checkbox"
@@ -207,7 +225,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                         className="text-[#467291] hover:text-[#5a8eb2] underline cursor-pointer text-sm leading-none flex items-center"
                                         style={{ fontFamily: 'var(--font-ubuntu)', fontWeight: 600 }}
                                     >
-                                        {autoforwardEnabled ? 'Skip Wait' : 'Forward Now'}
+                                        {autoforwardEnabled ? 'Skip Wait' : 'Redirect Now'}
                                     </button>
                                 </div>
                             </div>
