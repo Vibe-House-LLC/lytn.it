@@ -27,16 +27,9 @@ export default function Navigation() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm">
         <div className="w-full px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo - always show, but only clickable when not on home page */}
-            <div className="flex-shrink-0">
-              {isHomePage ? (
-                <h1 
-                  className="text-[#467291] text-2xl font-semibold"
-                  style={{ fontFamily: 'var(--font-dosis)' }}
-                >
-                  lytn.it
-                </h1>
-              ) : (
+            {/* Logo - only show when not on home page */}
+            {!isHomePage && (
+              <div className="flex-shrink-0">
                 <Link href="/" className="flex items-center">
                   <h1 
                     className="text-[#467291] hover:text-[#5a8eb2] transition-colors text-2xl font-semibold"
@@ -45,11 +38,11 @@ export default function Navigation() {
                     lytn.it
                   </h1>
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Auth section */}
-            <div className="flex items-center">
+            <div className={`flex items-center ${isHomePage ? 'ml-auto' : ''}`}>
               <AuthSection onShowAuth={() => setShowAuthenticator(true)} />
             </div>
           </div>
