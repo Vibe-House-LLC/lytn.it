@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { trackForward } from '@/lib/tracking';
 import ReportLink from './report-link';
 
@@ -49,19 +49,6 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         }
     }, [destination, showFullUrl]);
 
-    // Countdown timer for auto-forwarding
-    useEffect(() => {
-        if (countdown > 0 && autoforwardEnabled) {
-            const timer = setTimeout(() => {
-                setCountdown(countdown - 1);
-            }, 1000);
-            return () => clearTimeout(timer);
-        } else if (countdown === 0 && autoforwardEnabled) {
-            // Auto-forward when countdown reaches 0
-            handleDestinationClick();
-        }
-    }, [countdown, autoforwardEnabled]);
-
     // Save autoforward preference to localStorage whenever it changes
     const handleAutoforwardToggle = (enabled: boolean) => {
         setAutoforwardEnabled(enabled);
@@ -71,7 +58,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         }
     };
 
-    const handleDestinationClick = async () => {
+    const handleDestinationClick = useCallback(async () => {
         // Track the forward event
         try {
             await trackForward({
@@ -85,7 +72,20 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
         }
         
         window.location.href = destination;
-    };
+    }, [id, destination, trackingData.ip, trackingData.referer]);
+
+    // Countdown timer for auto-forwarding
+    useEffect(() => {
+        if (countdown > 0 && autoforwardEnabled) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (countdown === 0 && autoforwardEnabled) {
+            // Auto-forward when countdown reaches 0
+            handleDestinationClick();
+        }
+    }, [countdown, autoforwardEnabled, handleDestinationClick]);
 
     const handleReportSuccess = () => {
         setShowReportModal(false);
