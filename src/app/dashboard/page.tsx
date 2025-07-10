@@ -6,18 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminDashboard from './admin/page';
 import UserDashboard from './user/page';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 export default function DashboardPage() {
   const { user } = useAuthenticator((context) => [context.user]);
   const [isAdminView, setIsAdminView] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+
   useEffect(() => {
-    // Check if user is admin (for now, all authenticated users are admins)
-    // In a real app, you'd check user groups or permissions
-    if (user) {
-      setIsAdmin(true);
-    }
+    fetchAuthSession()
+      .then((session) => {
+        const groups = session?.tokens?.idToken?.payload?.['cognito:groups'];
+        // Guard: groups must be an array of strings
+        if (Array.isArray(groups) && groups.includes('admins')) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      })
+      .catch(() => setIsAdmin(false));
   }, [user]);
 
   if (!user) {

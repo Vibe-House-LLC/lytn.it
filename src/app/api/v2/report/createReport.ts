@@ -51,7 +51,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
             // Handle email validation - use provided email or return null
             const validEmail = reporterEmail && reporterEmail.trim() && isValidEmail(reporterEmail.trim()) 
                 ? reporterEmail.trim() 
-                : 'null';
+                : null;
 
             const data = {
                 lytnUrl: url,
