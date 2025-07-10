@@ -71,6 +71,14 @@ const schema = a.schema({
     'resolved'
   ]),
 
+  AdminActionType: a.enum([
+    'status_change',
+    'soft_delete',
+    'restore',
+    'add_note',
+    'update_fields'
+  ]),
+
   emailReportedLink: a.query()
     .arguments({
       link: a.string().required(),
@@ -246,6 +254,19 @@ const schema = a.schema({
       allow.owner().to(['create', 'read'])
     ]),
     shortenedUrl: a.belongsTo('shortenedUrl', 'shortenedUrlId'),
+    lastAdminAction: a.ref('AdminActionType').authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    lastAdminEmail: a.email().authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    adminNotes: a.string().authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    actionLogs: a.hasMany('adminActionLog', 'reportedLinkId'),
   })
     .secondaryIndexes((index) => [
       index("reporterEmail").sortKeys(["createdAt"]),
@@ -257,6 +278,45 @@ const schema = a.schema({
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
       allow.owner().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+
+  adminActionLog: a.model({
+    id: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    reportedLinkId: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    reportedLink: a.belongsTo('reportedLink', 'reportedLinkId'),
+    actionType: a.ref('AdminActionType').authorization(allow => [
+      allow.group('admins')
+    ]),
+    adminEmail: a.email().authorization(allow => [
+      allow.group('admins')
+    ]),
+    adminUserId: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    previousValue: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    newValue: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    notes: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.group('admins')
+    ]),
+  })
+    .secondaryIndexes((index) => [
+      index("reportedLinkId").sortKeys(["createdAt"]),
+      index("adminEmail").sortKeys(["createdAt"]),
+      index("actionType").sortKeys(["createdAt"]),
+    ])
+    .authorization((allow) => [
       allow.group('admins')
     ]),
 

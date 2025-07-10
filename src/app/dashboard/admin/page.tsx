@@ -21,6 +21,7 @@ const client = generateClient<Schema>({ authMode: 'userPool' });
 // Define proper types based on the schema
 type ReportedLinkStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed';
 type ReportReason = 'spam' | 'malware' | 'phishing' | 'inappropriate_content' | 'copyright_violation' | 'fraud' | 'harassment' | 'other';
+type AdminActionType = 'status_change' | 'soft_delete' | 'restore' | 'add_note' | 'update_fields';
 
 interface ReportedLink {
   id: string;
@@ -37,6 +38,9 @@ interface ReportedLink {
   deletedReason?: 'spam' | 'inappropriate_content' | 'copyright_violation' | 'user_request' | 'admin_action' | 'resolved' | null;
   source?: 'user_reported' | 'admin_reported' | 'automated_scan' | 'external_api' | null;
   owner?: string | null;
+  lastAdminAction?: AdminActionType | null;
+  lastAdminEmail?: string | null;
+  adminNotes?: string | null;
 }
 
 interface LoadingStates {
@@ -59,19 +63,43 @@ interface Statistics {
   todayCount: number;
 }
 
+interface ActionModal {
+  isOpen: boolean;
+  report: ReportedLink | null;
+  actionType: 'status_change' | 'soft_delete' | 'restore' | 'add_note';
+  newStatus?: ReportedLinkStatus;
+}
+
+interface AdminLog {
+  id: string;
+  reportedLinkId?: string | null;
+  actionType?: AdminActionType | null;
+  adminEmail?: string | null;
+  adminUserId?: string | null;
+  previousValue?: string | null;
+  newValue?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+}
+
 const PAGE_SIZE = 20;
 
 export default function AdminDashboard() {
   const { user } = useAuthenticator((context) => [context.user]);
   const [allReportedLinks, setAllReportedLinks] = useState<ReportedLink[]>([]);
+  const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logsLoading, setLogsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt' | 'status'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReport, setSelectedReport] = useState<ReportedLink | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [actionModal, setActionModal] = useState<ActionModal>({ isOpen: false, report: null, actionType: 'add_note' });
+  const [actionNotes, setActionNotes] = useState('');
   
   const [filters, setFilters] = useState<Filters>({
     status: 'all',
@@ -89,12 +117,12 @@ export default function AdminDashboard() {
       let nextToken: string | undefined;
       
       do {
-        const result = await client.models.reportedLink.list({
+      const result = await client.models.reportedLink.list({
           limit: 100,
           nextToken,
-        });
-        
-        if (result.data) {
+      });
+      
+      if (result.data) {
           allLinks.push(...(result.data as ReportedLink[]));
           nextToken = result.nextToken || undefined;
         }
@@ -106,6 +134,24 @@ export default function AdminDashboard() {
       setError('Failed to load reported links. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchAdminLogs = useCallback(async () => {
+    try {
+      setLogsLoading(true);
+      const result = await client.models.adminActionLog.list({
+        limit: 50,
+        authMode: 'userPool',
+      });
+      
+      if (result.data) {
+        setAdminLogs(result.data as AdminLog[]);
+      }
+    } catch (err) {
+      console.error('Error fetching admin logs:', err);
+    } finally {
+      setLogsLoading(false);
     }
   }, []);
 
@@ -204,48 +250,7 @@ export default function AdminDashboard() {
 
   const totalPages = Math.ceil(filteredAndSortedLinks.length / PAGE_SIZE);
 
-  const updateStatus = useCallback(async (id: string, newStatus: ReportedLinkStatus) => {
-    const validStatuses: ReportedLinkStatus[] = ['pending', 'reviewed', 'resolved', 'dismissed'];
-    if (!validStatuses.includes(newStatus)) {
-      setError('Invalid status value');
-      return;
-    }
 
-    setLoadingStates(prev => ({ ...prev, [`${id}-${newStatus}`]: true }));
-    
-    try {
-      await client.models.reportedLink.update({
-        id,
-        status: newStatus,
-        updatedAt: new Date().toISOString(),
-      });
-      
-      // Update local state
-      setAllReportedLinks(prev =>
-        prev.map(link =>
-          link.id === id 
-            ? { ...link, status: newStatus, updatedAt: new Date().toISOString() } 
-            : link
-        )
-      );
-      
-      // Update selected report if it's the one being updated
-      if (selectedReport?.id === id) {
-        setSelectedReport(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null);
-      }
-      
-      setError(null);
-    } catch (err) {
-      console.error('Error updating status:', err);
-      setError('Failed to update status. Please try again.');
-    } finally {
-      setLoadingStates(prev => {
-        const newState = { ...prev };
-        delete newState[`${id}-${newStatus}`];
-        return newState;
-      });
-    }
-  }, [selectedReport]);
 
   const resetFilters = () => {
     setFilters({
@@ -277,11 +282,97 @@ export default function AdminDashboard() {
     setSelectedReport(null);
   };
 
+  const openActionModal = (report: ReportedLink, actionType: ActionModal['actionType'], newStatus?: ReportedLinkStatus) => {
+    setActionModal({ isOpen: true, report, actionType, newStatus });
+    setActionNotes('');
+  };
+
+  const closeActionModal = () => {
+    setActionModal({ isOpen: false, report: null, actionType: 'add_note' });
+    setActionNotes('');
+  };
+
+  const handleActionSubmit = useCallback(async () => {
+    if (!actionModal.report) return;
+
+    const report = actionModal.report;
+    setLoadingStates(prev => ({ ...prev, [`${report.id}-${actionModal.actionType}`]: true }));
+
+    try {
+      const updateData: Partial<ReportedLink> = {};
+
+      if (actionModal.actionType === 'status_change') {
+        if (!actionModal.newStatus) return;
+        updateData.status = actionModal.newStatus;
+      } else if (actionModal.actionType === 'soft_delete') {
+        updateData.deletedAt = new Date().toISOString();
+        updateData.deletedReason = 'admin_action';
+      } else if (actionModal.actionType === 'restore') {
+        updateData.deletedAt = null;
+        updateData.deletedReason = null;
+      } else if (actionModal.actionType === 'add_note') {
+        if (!actionNotes.trim()) return;
+        updateData.adminNotes = actionNotes.trim();
+      }
+
+      if (Object.keys(updateData).length === 0) return;
+
+      await client.models.reportedLink.update({
+        id: report.id,
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Log the admin action
+      if (user?.signInDetails?.loginId) {
+        await client.models.adminActionLog.create({
+          reportedLinkId: report.id,
+          actionType: actionModal.actionType,
+          adminEmail: user.signInDetails.loginId,
+          adminUserId: user.userId,
+          notes: actionNotes || '',
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      // Update local state
+      setAllReportedLinks(prev =>
+        prev.map(link =>
+          link.id === report.id
+            ? { ...link, ...updateData, updatedAt: new Date().toISOString() }
+            : link
+        )
+      );
+
+      // Update selected report if it's the one being updated
+      if (selectedReport?.id === report.id) {
+        setSelectedReport(prev => prev ? { ...prev, ...updateData, updatedAt: new Date().toISOString() } : null);
+      }
+
+      setError(null);
+    } catch (err) {
+      console.error('Error performing action:', err);
+      setError('Failed to perform action. Please try again.');
+    } finally {
+      setLoadingStates(prev => {
+        const newState = { ...prev };
+        delete newState[`${report.id}-${actionModal.actionType}`];
+        return newState;
+      });
+      closeActionModal();
+    }
+  }, [actionModal, actionNotes, selectedReport, user]);
+
+  const isLinkDeleted = (link: ReportedLink): boolean => {
+    return link.deletedAt !== null && link.deletedReason !== null;
+  };
+
   useEffect(() => {
     if (user) {
       fetchAllReportedLinks();
+      fetchAdminLogs();
     }
-  }, [user, fetchAllReportedLinks]);
+  }, [user, fetchAllReportedLinks, fetchAdminLogs]);
 
   const getStatusColor = (status: string | null | undefined): string => {
     switch (status) {
@@ -329,7 +420,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-24">
+    <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-600">Manage reported links and review user reports</p>
@@ -487,6 +578,50 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
+      {/* Admin Action Logs */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Recent Admin Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {logsLoading ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-600">Loading admin logs...</p>
+            </div>
+          ) : adminLogs.length === 0 ? (
+            <p className="text-gray-600 text-center py-4">No admin actions recorded yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {adminLogs.slice(0, 5).map((log) => (
+                <div key={log.id} className="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {log.actionType?.replace('_', ' ').toUpperCase()} by {log.adminEmail}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {formatDate(log.createdAt)} • Report ID: {log.reportedLinkId?.substring(0, 8)}...
+                      </div>
+                      {log.notes && (
+                        <div className="text-sm text-gray-700 mt-2 bg-white p-2 rounded">
+                          {log.notes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {adminLogs.length > 5 && (
+                <div className="text-center text-sm text-gray-500 pt-2">
+                  +{adminLogs.length - 5} more actions
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {error && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           <div className="flex items-center justify-between">
@@ -506,10 +641,10 @@ export default function AdminDashboard() {
       <Card>
         <CardContent className="p-0">
           {loading && allReportedLinks.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading reported links...</p>
-            </div>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading reported links...</p>
+          </div>
           ) : filteredAndSortedLinks.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-600">No reported links found with current filters.</p>
@@ -550,12 +685,19 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y">
                   {paginatedLinks.map((link) => (
-                    <tr key={link.id} className="hover:bg-gray-50">
+                    <tr key={link.id} className={`hover:bg-gray-50 ${isLinkDeleted(link) ? 'bg-red-50' : ''}`}>
                       <td className="p-4 text-sm text-gray-600">
                         {formatDate(link.createdAt)}
                       </td>
                       <td className="p-4">
-                        <div className="text-sm font-medium">{link.shortId || 'N/A'}</div>
+                        <div className="text-sm font-medium">
+                          {link.shortId || 'N/A'}
+                          {isLinkDeleted(link) && (
+                            <span className="ml-2 text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                              DELETED
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-500">{link.lytnUrl || 'N/A'}</div>
                       </td>
                       <td className="p-4">
@@ -587,37 +729,46 @@ export default function AdminDashboard() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button size="sm" variant="outline">
-                                Change Status
+                                Actions
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                              <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                              <DropdownMenuLabel>Admin Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {(['pending', 'reviewed', 'resolved', 'dismissed'] as const).map((status) => {
-                                const isCurrentStatus = (link.status || 'pending') === status;
-                                const isLoading = loadingStates[`${link.id}-${status}`];
-                                
-                                return (
-                                  <DropdownMenuItem
-                                    key={status}
-                                    onClick={() => !isCurrentStatus && !isLoading && updateStatus(link.id, status)}
-                                    disabled={isCurrentStatus || isLoading}
-                                    className={isCurrentStatus ? 'bg-gray-100' : ''}
-                                  >
-                                    {isLoading ? (
-                                      <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Updating...</span>
-                                      </div>
-                                    ) : (
-                                      <span>
-                                        {isCurrentStatus ? '✓ ' : ''}
-                                        Mark as {getStatusDisplayName(status)}
-                                      </span>
-                                    )}
-                                  </DropdownMenuItem>
-                                );
-                              })}
+                              
+                              {/* Status Changes */}
+                              <DropdownMenuItem onClick={() => openActionModal(link, 'status_change', 'pending')}>
+                                Mark as Pending
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openActionModal(link, 'status_change', 'reviewed')}>
+                                Mark as Reviewed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openActionModal(link, 'status_change', 'resolved')}>
+                                Mark as Resolved
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openActionModal(link, 'status_change', 'dismissed')}>
+                                Mark as Dismissed
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Link Management */}
+                              {isLinkDeleted(link) ? (
+                                <DropdownMenuItem onClick={() => openActionModal(link, 'restore')}>
+                                  Restore Link
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => openActionModal(link, 'soft_delete')}>
+                                  Soft Delete Link
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuSeparator />
+                              
+                              {/* Notes */}
+                              <DropdownMenuItem onClick={() => openActionModal(link, 'add_note')}>
+                                Add Note
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -658,10 +809,65 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Action Modal */}
+      {actionModal.isOpen && actionModal.report && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {actionModal.actionType === 'status_change' && `Change Status to ${getStatusDisplayName(actionModal.newStatus)}`}
+                {actionModal.actionType === 'soft_delete' && 'Soft Delete Link'}
+                {actionModal.actionType === 'restore' && 'Restore Link'}
+                {actionModal.actionType === 'add_note' && 'Add Admin Note'}
+              </h3>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Link:</strong> {actionModal.report.shortId || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Destination:</strong> {actionModal.report.destinationUrl || 'N/A'}
+                </p>
+                
+                <label className="block text-sm font-medium mb-2">
+                  {actionModal.actionType === 'add_note' ? 'Note' : 'Reason/Notes'} {actionModal.actionType === 'add_note' ? '(Required)' : '(Optional)'}
+                </label>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                  rows={3}
+                  placeholder={
+                    actionModal.actionType === 'add_note' 
+                      ? 'Enter your note...' 
+                      : 'Enter reason for this action...'
+                  }
+                  value={actionNotes}
+                  onChange={(e) => setActionNotes(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={closeActionModal}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleActionSubmit}
+                  disabled={actionModal.actionType === 'add_note' && !actionNotes.trim()}
+                >
+                  {actionModal.actionType === 'status_change' && 'Update Status'}
+                  {actionModal.actionType === 'soft_delete' && 'Delete Link'}
+                  {actionModal.actionType === 'restore' && 'Restore Link'}
+                  {actionModal.actionType === 'add_note' && 'Add Note'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Detail Modal */}
       {showDetailModal && selectedReport && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-2xl font-bold">Report Details</h2>
@@ -673,7 +879,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <h3 className="font-semibold mb-2 text-gray-700">Link Information</h3>
                   <div className="space-y-2 text-sm">
@@ -693,6 +899,12 @@ export default function AdminDashboard() {
                       <span className="font-medium">Owner:</span>
                       <span className="ml-2">{selectedReport.owner || 'N/A'}</span>
                     </div>
+                    {isLinkDeleted(selectedReport) && (
+                      <div className="text-red-600 font-medium">
+                        <span className="font-medium">⚠️ DELETED:</span>
+                        <span className="ml-2">{formatDate(selectedReport.deletedAt)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -719,7 +931,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <h3 className="font-semibold mb-2 text-gray-700">Status & Dates</h3>
                   <div className="space-y-2 text-sm">
@@ -741,61 +953,43 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div>
-                  <h3 className="font-semibold mb-2 text-gray-700">Deletion Info</h3>
+                  <h3 className="font-semibold mb-2 text-gray-700">Admin Actions</h3>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium">Deleted At:</span>
-                      <span className="ml-2">{formatDate(selectedReport.deletedAt)}</span>
+                      <span className="font-medium">Last Action:</span>
+                      <span className="ml-2">{selectedReport.lastAdminAction || 'N/A'}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Deletion Reason:</span>
-                      <span className="ml-2">{selectedReport.deletedReason?.replace('_', ' ') || 'N/A'}</span>
+                      <span className="font-medium">Admin User:</span>
+                      <span className="ml-2">{selectedReport.lastAdminEmail || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
               </div>
+              
+              {selectedReport.adminNotes && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 text-gray-700">Admin Notes</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <pre className="text-sm whitespace-pre-wrap">{selectedReport.adminNotes}</pre>
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-between items-center pt-4 border-t">
                 <div className="text-sm text-gray-600">
                   Report ID: {selectedReport.id}
                 </div>
                 <div className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button>
-                        Update Status
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {(['pending', 'reviewed', 'resolved', 'dismissed'] as const).map((status) => {
-                        const isCurrentStatus = (selectedReport.status || 'pending') === status;
-                        const isLoading = loadingStates[`${selectedReport.id}-${status}`];
-                        
-                        return (
-                          <DropdownMenuItem
-                            key={status}
-                            onClick={() => !isCurrentStatus && !isLoading && updateStatus(selectedReport.id, status)}
-                            disabled={isCurrentStatus || isLoading}
-                            className={isCurrentStatus ? 'bg-gray-100' : ''}
-                          >
-                            {isLoading ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
-                                <span>Updating...</span>
-                              </div>
-                            ) : (
-                              <span>
-                                {isCurrentStatus ? '✓ ' : ''}
-                                Mark as {getStatusDisplayName(status)}
-                              </span>
-                            )}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button
+                    onClick={() => {
+                      closeDetailModal();
+                      openActionModal(selectedReport, 'add_note');
+                    }}
+                    variant="outline"
+                  >
+                    Add Note
+                  </Button>
                   <Button variant="outline" onClick={closeDetailModal}>
                     Close
                   </Button>
