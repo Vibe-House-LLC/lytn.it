@@ -3,7 +3,7 @@ import createLink from "./createLink";
 import getLink from "./getLink";
 
 export async function POST(request: Request) {
-    const { url, source, owner, userEmail } = await request.json();
+    const { url, source, userEmail } = await request.json();
     const clientIp = request.headers.get('x-forwarded-for') || undefined;
     console.log('Client IP:', clientIp);
     console.log('URL:', url);
@@ -12,8 +12,6 @@ export async function POST(request: Request) {
         url, 
         clientIp,
         source: source || 'user_created',
-        owner: owner || userEmail,
-        userEmail
     });
     return Response.json({ id: result });
 }

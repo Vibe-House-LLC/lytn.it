@@ -1,12 +1,15 @@
 import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/api";
-import { Schema } from "../../../../../amplify/data/resource";
+// import { generateClient } from "aws-amplify/api";
+// import { Schema } from "../../../../../amplify/data/resource";
 import amplifyConfig from "../../../../../amplify_outputs.json";
+import { cookiesClient } from "@/utilities/amplify-utils";
 
 // Configure Amplify with the same config as the Lambda function
 Amplify.configure(amplifyConfig);
 
-const client = generateClient<Schema>({authMode: 'identityPool'});
+// const client = generateClient<Schema>({authMode: 'identityPool'});
+
+const client = cookiesClient;
 
 /**
  * Validate and clean IP address for schema validation
@@ -67,11 +70,13 @@ function cleanUrl(url: string): string {
  * Check if an ID already exists
  */
 async function hasConflict(id: string): Promise<boolean> {
+    console.log('hasConflict called with id:', id);
     if (id === '') {
         return true;
     }
     try {
         const result = await client.models.shortenedUrl.get({ id });
+        console.log('Result:', result);
         const hasConflict = !!result.data;
         console.log(`Conflict check for ID "${id}": ${hasConflict ? 'CONFLICT' : 'NO CONFLICT'}`);
         if (hasConflict) {
@@ -114,13 +119,16 @@ export default async function createLink({ url, clientIp, source = 'user_created
         // Generate unique ID using VainID algorithm
         let generatedId: string;
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 1;
 
         console.log(`Starting ID generation with max ${maxAttempts} attempts`);
         while (true) {
             attempts++;
 
-            generatedId = (await client.queries.vainId({}))?.data?.id || '';
+            const result = await client.queries.vainId({});
+            console.log('result:', result);
+
+            generatedId = result?.data?.id || '';
             
             const conflict = await hasConflict(generatedId);
             if (!conflict) {
@@ -174,6 +182,11 @@ export default async function createLink({ url, clientIp, source = 'user_created
         
         // Create shortened URL record
         const newRecord = await client.models.shortenedUrl.create(recordData);
+
+        // const newRecord = await runWithAmplifyServerContext({
+        //     nextServerContext: { cookies },
+        //     operation: (contextSpec) => 
+        //   });
 
         console.log('Database record created:', JSON.stringify(newRecord, null, 2));
         console.log('newRecord.data:', newRecord.data);
