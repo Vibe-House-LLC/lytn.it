@@ -128,7 +128,7 @@ export default async function createLink({ url, clientIp, source = 'user_created
         // Generate unique ID using VainID algorithm
         let generatedId: string;
         let attempts = 0;
-        const maxAttempts = 1;
+        const maxAttempts = 10;
 
         console.log(`Starting ID generation with max ${maxAttempts} attempts`);
         while (true) {
