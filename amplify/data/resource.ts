@@ -2,6 +2,7 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { vainId } from '../functions/vainId/resource';
 import { emailReportedLink } from '../functions/emailReportedLink/resource';
 import { userManagement } from '../functions/userManagement/resource';
+import { linkImporter } from '../functions/linkImporter/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -115,6 +116,19 @@ const schema = a.schema({
     .returns(a.json())
     .authorization((allow) => [allow.group('admins')])
     .handler(a.handler.function(userManagement)),
+
+  linkImporter: a
+    .query()
+    .arguments({
+      operation: a.string().required(),
+      links: a.json(),
+      importId: a.string(),
+      batchSize: a.integer(),
+      dryRun: a.boolean()
+    })
+    .returns(a.json())
+    .authorization((allow) => [allow.group('admins')])
+    .handler(a.handler.function(linkImporter)),
 
   shortenedUrl: a.model({
     id: a.id().authorization(allow => [
