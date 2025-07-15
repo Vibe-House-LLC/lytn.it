@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 
 interface ImportLink {
@@ -30,6 +29,40 @@ interface ImportStats {
   successful: number;
   failed: number;
   skipped: number;
+}
+
+interface ExportLink {
+  id: string;
+  destination: string;
+  createdAt?: string;
+  source?: string;
+  status?: string;
+  owner?: string;
+  ip?: string;
+  deletedAt?: string;
+  deletedReason?: string;
+}
+
+interface ValidationResult {
+  totalLinks: number;
+  validLinks: number;
+  errorCount: number;
+  isValid: boolean;
+}
+
+interface ShortenedUrl {
+  id: string;
+  destination: string;
+  createdAt?: string;
+  source?: string;
+  status?: string;
+  owner?: string;
+  ip?: string;
+}
+
+interface ImportResult {
+  successful: ShortenedUrl[];
+  duplicates: ImportLink[];
 }
 
 const SAMPLE_CSV = `id,destination,createdAt,source,status
@@ -62,10 +95,15 @@ export default function LinkImporter() {
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importStats, setImportStats] = useState<ImportStats | null>(null);
-  const [importId, setImportId] = useState<string | null>(null);
-  const [validationResult, setValidationResult] = useState<any>(null);
+
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [parsedLinks, setParsedLinks] = useState<ImportLink[]>([]);
+  const [exporting, setExporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [showForceUpdateDialog, setShowForceUpdateDialog] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
 
   const parseCSV = useCallback((csvText: string): ImportLink[] => {
     const lines = csvText.trim().split('\n');
@@ -81,7 +119,7 @@ export default function LinkImporter() {
     
     return lines.slice(1).map((line, index) => {
       const values = line.split(',').map(v => v.trim());
-      const link: any = {};
+      const link: Record<string, string> = {};
       
       headers.forEach((header, i) => {
         if (values[i] && values[i] !== '') {
@@ -93,7 +131,7 @@ export default function LinkImporter() {
         throw new Error(`Row ${index + 2}: Missing required fields (id, destination)`);
       }
       
-      return link as ImportLink;
+      return link as unknown as ImportLink;
     });
   }, []);
 
@@ -126,6 +164,8 @@ export default function LinkImporter() {
       setError(null);
       setValidationErrors([]);
       setValidationResult(null);
+      setImportResult(null);
+      setImportStats(null);
 
       const links = parseData();
       setParsedLinks(links);
@@ -133,25 +173,38 @@ export default function LinkImporter() {
 
       console.log('[LinkImporter] Validating', links.length, 'links');
 
-      const response = await fetch('/api/admin/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          operation: 'validateImport',
-          links
-        })
+      // Basic validation - just check required fields
+      const validLinks = links.filter(link => link.id && link.destination);
+      const errorCount = links.length - validLinks.length;
+
+      setValidationResult({
+        totalLinks: links.length,
+        validLinks: validLinks.length,
+        errorCount,
+        isValid: errorCount === 0
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Validation failed');
-      }
-
-      setValidationResult(data.data);
-      if (data.validationErrors) {
-        setValidationErrors(data.validationErrors);
-      }
+      // Set validation errors for missing required fields
+      const errors: ValidationError[] = [];
+      links.forEach((link, index) => {
+        if (!link.id) {
+          errors.push({
+            index,
+            field: 'id',
+            message: 'ID is required',
+            link
+          });
+        }
+        if (!link.destination) {
+          errors.push({
+            index,
+            field: 'destination',
+            message: 'Destination is required',
+            link
+          });
+        }
+      });
+      setValidationErrors(errors);
 
     } catch (err) {
       console.error('[LinkImporter] Validation error:', err);
@@ -162,26 +215,28 @@ export default function LinkImporter() {
     }
   };
 
-  const handleImport = async (dryRun = false) => {
+  const handleImport = async () => {
     try {
       setLoading(true);
       setError(null);
       setImportStats(null);
+      setImportResult(null);
 
       if (!parsedLinks.length) {
         throw new Error('No valid links to import. Please validate first.');
       }
 
-      console.log('[LinkImporter] Starting import, dryRun:', dryRun);
+      // Filter to only valid links (have id and destination)
+      const validLinks = parsedLinks.filter(link => link.id && link.destination);
 
-      const response = await fetch('/api/admin/import', {
+      console.log('[LinkImporter] Starting import of', validLinks.length, 'links');
+
+      const response = await fetch('/api/v2/admin/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          operation: 'importLinks',
-          links: parsedLinks,
-          batchSize: 25,
-          dryRun
+          links: validLinks,
+          updateDuplicates: false
         })
       });
 
@@ -191,16 +246,29 @@ export default function LinkImporter() {
         throw new Error(data.error || 'Import failed');
       }
 
-      setImportStats(data.stats);
-      setImportId(data.importId);
-      
-      if (!dryRun && data.success) {
-        // Clear the form after successful import
-        setImportData('');
-        setParsedLinks([]);
-        setShowPreview(false);
-        setValidationResult(null);
-      }
+      // Handle the response from the new API
+      const successful = data.successfulImports || [];
+      const duplicates = data.failedImports || [];
+
+      setImportResult({
+        successful,
+        duplicates
+      });
+
+      // Set import stats for existing UI
+      setImportStats({
+        total: validLinks.length,
+        processed: validLinks.length,
+        successful: successful.length,
+        failed: duplicates.length,
+        skipped: 0
+      });
+
+      // Clear the form after successful import
+      setImportData('');
+      setParsedLinks([]);
+      setShowPreview(false);
+      setValidationResult(null);
 
     } catch (err) {
       console.error('[LinkImporter] Import error:', err);
@@ -213,11 +281,171 @@ export default function LinkImporter() {
   const loadSample = (format: 'json' | 'csv') => {
     setImportFormat(format);
     setImportData(format === 'json' ? SAMPLE_JSON : SAMPLE_CSV);
+    setUploadedFileName(null);
     setError(null);
     setValidationErrors([]);
     setValidationResult(null);
     setShowPreview(false);
     setParsedLinks([]);
+    setImportResult(null);
+    setImportStats(null);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    
+    if (!fileExtension || !['json', 'csv'].includes(fileExtension)) {
+      setError('Please select a .json or .csv file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        setImportFormat(fileExtension as 'json' | 'csv');
+        setImportData(content);
+        setUploadedFileName(file.name);
+        setError(null);
+        setValidationErrors([]);
+        setValidationResult(null);
+        setShowPreview(false);
+        setParsedLinks([]);
+        setImportResult(null);
+        setImportStats(null);
+      }
+    };
+    reader.onerror = () => {
+      setError('Error reading file');
+    };
+    reader.readAsText(file);
+  };
+
+  const handleForceUpdate = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setShowForceUpdateDialog(false);
+
+      if (!importResult || !importResult.duplicates.length) {
+        throw new Error('No duplicates to update');
+      }
+
+      console.log('[LinkImporter] Force updating', importResult.duplicates.length, 'duplicates');
+
+      const response = await fetch('/api/v2/admin/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          links: importResult.duplicates,
+          updateDuplicates: true
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Force update failed');
+      }
+
+      // Handle the response from force update
+      const successful = data.successfulImports || [];
+      const stillFailed = data.failedImports || [];
+
+      // Update the import result to remove successfully updated duplicates
+      setImportResult(prev => prev ? {
+        successful: [...prev.successful, ...successful],
+        duplicates: stillFailed
+      } : null);
+
+      // Update import stats
+      setImportStats(prev => prev ? {
+        ...prev,
+        successful: prev.successful + successful.length,
+        failed: stillFailed.length
+      } : null);
+
+      if (successful.length > 0) {
+        console.log('[LinkImporter] Successfully force updated', successful.length, 'duplicates');
+      }
+
+    } catch (err) {
+      console.error('[LinkImporter] Force update error:', err);
+      setError(err instanceof Error ? err.message : 'Force update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async (format: 'json' | 'csv') => {
+    try {
+      setExporting(true);
+      setError(null);
+
+      console.log('[LinkImporter] Starting export, format:', format);
+
+      const response = await fetch('/api/v2/admin/export', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const links = await response.json();
+      
+      let content: string;
+      let filename: string;
+      let mimeType: string;
+
+      if (format === 'json') {
+        content = JSON.stringify(links, null, 2);
+        filename = `links-export-${new Date().toISOString().split('T')[0]}.json`;
+        mimeType = 'application/json';
+      } else {
+        // Convert to CSV
+        if (links.length === 0) {
+          content = 'id,destination,createdAt,source,status,owner,ip,deletedAt,deletedReason\n';
+        } else {
+          const headers = ['id', 'destination', 'createdAt', 'source', 'status', 'owner', 'ip', 'deletedAt', 'deletedReason'];
+          const csvHeaders = headers.join(',');
+          const csvRows = links.map((link: ExportLink) => 
+            headers.map(header => {
+              const value = link[header as keyof ExportLink];
+              // Handle null/undefined values and escape commas
+              const stringValue = value == null ? '' : String(value);
+              return stringValue.includes(',') ? `"${stringValue}"` : stringValue;
+            }).join(',')
+          );
+          content = [csvHeaders, ...csvRows].join('\n');
+        }
+        filename = `links-export-${new Date().toISOString().split('T')[0]}.csv`;
+        mimeType = 'text/csv';
+      }
+
+      // Create and download file
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('[LinkImporter] Export completed successfully');
+
+    } catch (err) {
+      console.error('[LinkImporter] Export error:', err);
+      setError(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -226,6 +454,31 @@ export default function LinkImporter() {
         <h2 className="text-2xl font-bold">Link Importer</h2>
         <p className="text-gray-600">Import previously created links in bulk</p>
       </div>
+
+      {/* Export Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Export Links</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button 
+              onClick={() => handleExport('json')}
+              disabled={exporting}
+              variant="outline"
+            >
+              {exporting ? 'Exporting...' : 'Download JSON'}
+            </Button>
+            <Button 
+              onClick={() => handleExport('csv')}
+              disabled={exporting}
+              variant="outline"
+            >
+              {exporting ? 'Exporting...' : 'Download CSV'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Import Format Selection */}
       <Card>
@@ -236,26 +489,50 @@ export default function LinkImporter() {
           <div className="flex gap-4 mb-4">
             <Button
               variant={importFormat === 'json' ? 'default' : 'outline'}
-              onClick={() => setImportFormat('json')}
+              onClick={() => {
+                setImportFormat('json');
+                setUploadedFileName(null);
+                setImportResult(null);
+                setImportStats(null);
+              }}
             >
               JSON
             </Button>
             <Button
               variant={importFormat === 'csv' ? 'default' : 'outline'}
-              onClick={() => setImportFormat('csv')}
+              onClick={() => {
+                setImportFormat('csv');
+                setUploadedFileName(null);
+                setImportResult(null);
+                setImportStats(null);
+              }}
             >
               CSV
             </Button>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => loadSample('json')}>
               Load JSON Sample
             </Button>
             <Button variant="outline" size="sm" onClick={() => loadSample('csv')}>
               Load CSV Sample
             </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              Upload File
+            </Button>
           </div>
+          <input
+            id="file-upload"
+            type="file"
+            accept=".json,.csv"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </CardContent>
       </Card>
 
@@ -266,13 +543,21 @@ export default function LinkImporter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {uploadedFileName && (
+              <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
+                📁 Uploaded: {uploadedFileName}
+              </div>
+            )}
             <Textarea
               placeholder={importFormat === 'json' 
                 ? 'Paste your JSON array of link objects here...'
                 : 'Paste your CSV data here (first row should be headers: id,destination,createdAt,source,status)...'
               }
               value={importData}
-              onChange={(e) => setImportData(e.target.value)}
+              onChange={(e) => {
+                setImportData(e.target.value);
+                setUploadedFileName(null); // Clear uploaded file name when manually editing
+              }}
               rows={10}
               className="font-mono text-sm"
             />
@@ -314,10 +599,7 @@ export default function LinkImporter() {
 
             {validationResult.isValid ? (
               <div className="flex gap-2">
-                <Button onClick={() => handleImport(true)} disabled={loading}>
-                  Dry Run
-                </Button>
-                <Button onClick={() => handleImport(false)} disabled={loading}>
+                <Button onClick={handleImport} disabled={loading}>
                   {loading ? 'Importing...' : 'Import Links'}
                 </Button>
               </div>
@@ -430,14 +712,86 @@ export default function LinkImporter() {
                 className="w-full"
               />
             )}
-            
-            {importId && (
-              <div className="mt-4 text-sm text-gray-600">
-                Import ID: <code className="bg-gray-100 px-1 rounded">{importId}</code>
-              </div>
-            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Duplicates */}
+      {importResult && importResult.duplicates && importResult.duplicates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Duplicates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 text-sm text-gray-600">
+              The following links were not imported because they already exist:
+            </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
+              {importResult.duplicates.map((link, index) => (
+                <div key={index} className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                  <div className="font-medium text-yellow-800">
+                    ID: {link.id}
+                  </div>
+                  <div className="text-gray-600 mt-1 break-all">
+                    Destination: {link.destination}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button 
+              onClick={() => setShowForceUpdateDialog(true)}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
+              Force Update Duplicates
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Force Update Confirmation Dialog */}
+      {showForceUpdateDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 min-h-screen">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold mb-4">Confirm Force Update</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to overwrite the existing data for these {importResult?.duplicates.length} links? 
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline"
+                onClick={() => setShowForceUpdateDialog(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleForceUpdate}
+                disabled={loading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {loading ? 'Updating...' : 'Yes, Force Update'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Screen */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 min-h-screen">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex flex-col items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+              <div className="text-lg font-medium text-gray-900">Processing Import...</div>
+              <div className="text-sm text-gray-600 mt-2 text-center">
+                Please wait while we import your links
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Error Display */}
