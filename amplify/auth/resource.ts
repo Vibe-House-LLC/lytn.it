@@ -1,5 +1,6 @@
 import { defineAuth } from '@aws-amplify/backend';
 import { emailReportedLink } from '../functions/emailReportedLink/resource';
+import { userManagement } from '../functions/userManagement/resource';
 
 /**
  * Define and configure your auth resource

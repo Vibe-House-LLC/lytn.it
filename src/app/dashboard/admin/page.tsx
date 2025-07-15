@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import UserManagement from '@/components/admin/user-management';
 
 const client = generateClient<Schema>({ authMode: 'userPool' });
 
@@ -86,6 +87,7 @@ const PAGE_SIZE = 20;
 
 export default function AdminDashboard() {
   const { user } = useAuthenticator((context) => [context.user]);
+  const [activeTab, setActiveTab] = useState<'reports' | 'users'>('reports');
   const [allReportedLinks, setAllReportedLinks] = useState<ReportedLink[]>([]);
   const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -426,8 +428,39 @@ export default function AdminDashboard() {
         <p className="text-gray-600">Manage reported links and review user reports</p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'reports'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Reported Links
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              User Management
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'reports' ? (
+        <>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">{statistics.pending}</div>
@@ -998,6 +1031,10 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+        </>
+      ) : (
+        <UserManagement />
       )}
     </div>
   );
