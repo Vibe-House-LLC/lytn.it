@@ -120,7 +120,7 @@ export default function AdminDashboard() {
       let nextToken: string | undefined;
       
       do {
-      const result = await client.models.reportedLink.list({
+      const result = await client.models.ReportedLink.list({
           limit: 100,
           nextToken,
       });
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
   const fetchAdminLogs = useCallback(async () => {
     try {
       setLogsLoading(true);
-      const result = await client.models.adminActionLog.list({
+      const result = await client.models.AdminActionLog.list({
         limit: 50,
         authMode: 'userPool',
       });
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
 
       if (Object.keys(updateData).length === 0) return;
 
-      await client.models.reportedLink.update({
+      await client.models.ReportedLink.update({
         id: report.id,
         ...updateData,
         updatedAt: new Date().toISOString(),
@@ -328,7 +328,7 @@ export default function AdminDashboard() {
 
       // Log the admin action
       if (user?.signInDetails?.loginId) {
-        await client.models.adminActionLog.create({
+        await client.models.AdminActionLog.create({
           reportedLinkId: report.id,
           actionType: actionModal.actionType,
           adminEmail: user.signInDetails.loginId,

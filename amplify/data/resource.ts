@@ -116,7 +116,7 @@ const schema = a.schema({
     .authorization((allow) => [allow.group('admins')])
     .handler(a.handler.function(userManagement)),
 
-  shortenedUrl: a.model({
+  ShortenedUrl: a.model({
     id: a.id().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
@@ -166,10 +166,10 @@ const schema = a.schema({
       allow.owner().to(['create', 'read'])
     ]),
     owner: a.string().authorization(allow => [allow.owner().to(['read', 'create']), allow.group('admins')]),
-    reports: a.hasMany('reportedLink', 'shortenedUrlId'),
+    reports: a.hasMany('ReportedLink', 'shortenedUrlId'),
   })
     .secondaryIndexes((index) => [
-      index("owner").sortKeys(["createdAt"]),
+      index("owner").sortKeys(["createdAt"]).queryField('listShortenedUrlByOwnerAndCreatedAt'),
       index("status").sortKeys(["createdAt"]),
       index("source").sortKeys(["createdAt"]),
       index("ip").sortKeys(["createdAt"]),
@@ -181,7 +181,7 @@ const schema = a.schema({
       allow.group('admins')
     ]),
 
-  reportedLink: a.model({
+  ReportedLink: a.model({
     id: a.id().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
@@ -272,7 +272,7 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    shortenedUrl: a.belongsTo('shortenedUrl', 'shortenedUrlId'),
+    shortenedUrl: a.belongsTo('ShortenedUrl', 'shortenedUrlId'),
     lastAdminAction: a.ref('AdminActionType').authorization(allow => [
       allow.group('admins'),
       allow.owner().to(['read'])
@@ -285,9 +285,10 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['read'])
     ]),
-    actionLogs: a.hasMany('adminActionLog', 'reportedLinkId'),
+    actionLogs: a.hasMany('AdminActionLog', 'reportedLinkId'),
   })
     .secondaryIndexes((index) => [
+      index("owner").sortKeys(["createdAt"]).queryField('listReportedLinkByOwnerAndCreatedAt'),
       index("reporterEmail").sortKeys(["createdAt"]),
       index("status").sortKeys(["createdAt"]),
       index("reason").sortKeys(["createdAt"]),
@@ -300,14 +301,14 @@ const schema = a.schema({
       allow.group('admins')
     ]),
 
-  adminActionLog: a.model({
+  AdminActionLog: a.model({
     id: a.id().authorization(allow => [
       allow.group('admins')
     ]),
     reportedLinkId: a.id().authorization(allow => [
       allow.group('admins')
     ]),
-    reportedLink: a.belongsTo('reportedLink', 'reportedLinkId'),
+    reportedLink: a.belongsTo('ReportedLink', 'reportedLinkId'),
     actionType: a.ref('AdminActionType').authorization(allow => [
       allow.group('admins')
     ]),
@@ -339,7 +340,7 @@ const schema = a.schema({
       allow.group('admins')
     ]),
 
-  userProfile: a.model({
+  UserProfile: a.model({
     id: a.id().authorization(allow => [
       allow.group('admins')
     ]),
@@ -370,7 +371,7 @@ const schema = a.schema({
     reportsSubmitted: a.integer().default(0).authorization(allow => [
       allow.group('admins')
     ]),
-    userSessions: a.hasMany('userSession', 'userId'),
+    userSessions: a.hasMany('UserSession', 'userId'),
   })
     .secondaryIndexes((index) => [
       index("userId").sortKeys(["createdAt"]),
@@ -380,14 +381,14 @@ const schema = a.schema({
       allow.group('admins')
     ]),
 
-  userSession: a.model({
+  UserSession: a.model({
     id: a.id().authorization(allow => [
       allow.group('admins')
     ]),
     userId: a.string().authorization(allow => [
       allow.group('admins')
     ]),
-    userProfile: a.belongsTo('userProfile', 'userId'),
+    userProfile: a.belongsTo('UserProfile', 'userId'),
     loginAt: a.datetime().authorization(allow => [
       allow.group('admins')
     ]),

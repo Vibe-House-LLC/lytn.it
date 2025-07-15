@@ -68,7 +68,7 @@ async function hasConflict(id: string): Promise<boolean> {
         return true;
     }
     try {
-        const result = await client.models.shortenedUrl.get({ id });
+        const result = await client.models.ShortenedUrl.get({ id });
         const hasConflict = !!result.data;
         console.log(`Conflict check for ID "${id}": ${hasConflict ? 'CONFLICT' : 'NO CONFLICT'}`);
         if (hasConflict) {
@@ -190,7 +190,7 @@ export default async function createLink({ url, clientIp, source = 'user_created
         console.log('Record data to create:', recordData);
 
         // Create shortened URL record
-        const newRecord = await client.models.shortenedUrl.create(recordData, { authMode: loggedIn });
+        const newRecord = await client.models.ShortenedUrl.create(recordData, { authMode: loggedIn });
 
         console.log('Database record created:', JSON.stringify(newRecord, null, 2));
         console.log('newRecord.data:', newRecord.data);

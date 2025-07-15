@@ -48,24 +48,43 @@ export default function UserDashboard() {
       setError(null);
 
       // Fetch user's shortened URLs
-      const { data: urls } = await client.models.shortenedUrl.list({
-        filter: { owner: { eq: user.username } },
-        limit: 100,
+      // const { data: urls } = await client.models.shortenedUrl.list({
+      //   filter: { owner: { eq: user.userId } },
+      //   limit: 100,
+      // });
+
+      console.log(user);
+
+      const { data: urls } = await client.models.ShortenedUrl.listShortenedUrlByOwnerAndCreatedAt({
+        owner: `${user.userId}::${user.username}`
       });
 
       // Fetch reports for those URLs
-      const urlIds = urls.map((u) => u.id);
-      const { data: linkReports } = await client.models.reportedLink.list({
-        filter: { shortenedUrlId: { in: urlIds } },
-        limit: 200,
+      // const urlIds = urls.map((u) => u.id);
+      const { data: linkReports } = await client.models.ReportedLink.listReportedLinkByOwnerAndCreatedAt({
+        owner: `${user.userId}::${user.username}`
       });
 
-      setLinks(urls.map(link => ({
-        ...link,
-        reports: linkReports.filter(report => report.shortenedUrlId === link.id)
-      })));
+      // Ensure all link IDs are strings and filter out any with null/undefined IDs
+      const validLinks = urls
+        .filter(link => typeof link.id === 'string' && link.id !== null)
+        .map(link => ({
+          ...link,
+          id: String(link.id),
+          reports: linkReports.filter(report => report.shortenedUrlId === link.id)
+        }));
 
-      setReports(linkReports as UserReport[]);
+      setLinks(validLinks as UserLink[]);
+
+      // Ensure all report IDs are strings and filter out any with null/undefined IDs
+      const validReports = (linkReports ?? []).filter(
+        (report: { id?: string | null }) => typeof report.id === 'string' && report.id !== null
+      ).map((report: { id?: string | null }) => ({
+        ...report,
+        id: String(report.id)
+      }));
+
+      setReports(validReports as UserReport[]);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setError('Failed to load your data. Please try again.');

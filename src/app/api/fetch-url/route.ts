@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         console.log('API route: amplify config region:', amplifyConfig.data?.aws_region);
         
         try {
-            const result = await client.models.shortenedUrl.get({ id }, { selectionSet: ['destination'] });
+            const result = await client.models.ShortenedUrl.get({ id }, { selectionSet: ['destination'] });
             return NextResponse.json({ destination: result.data?.destination || null });
         } catch (error) {
             console.error('API route error:', error);
