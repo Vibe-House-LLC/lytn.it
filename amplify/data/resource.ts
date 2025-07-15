@@ -34,15 +34,15 @@ const schema = a.schema({
   ]),
 
   ReportStatus: a.enum([
-    'pending', 
-    'reviewed', 
-    'resolved', 
+    'pending',
+    'reviewed',
+    'resolved',
     'dismissed'
   ]),
 
   DeletionReason: a.enum([
     'spam',
-    'inappropriate_content', 
+    'inappropriate_content',
     'copyright_violation',
     'malware',
     'user_request',
@@ -66,7 +66,7 @@ const schema = a.schema({
   ReportDeletionReason: a.enum([
     'spam',
     'inappropriate_content',
-    'copyright_violation', 
+    'copyright_violation',
     'user_request',
     'admin_action',
     'resolved'
@@ -95,8 +95,8 @@ const schema = a.schema({
     .query()
     .arguments({})
     .returns(a.ref('vainIdReturn'))
-    .authorization((allow) => [allow.guest(), allow.authenticated()])
-    .handler(a.handler.function(vainId)),
+    .handler(a.handler.function(vainId))
+    .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
   userManagement: a
     .query()
@@ -165,7 +165,7 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete']), allow.group('admins')]),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'create']), allow.group('admins')]),
     reports: a.hasMany('reportedLink', 'shortenedUrlId'),
   })
     .secondaryIndexes((index) => [
@@ -420,7 +420,7 @@ const schema = a.schema({
 })
   .authorization((allow) => [
     allow.resource(vainId),
-    allow.resource(userManagement)
+    allow.resource(userManagement),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;
