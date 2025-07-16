@@ -43,6 +43,7 @@ interface ReportedLink {
   lastAdminAction?: AdminActionType | null;
   lastAdminEmail?: string | null;
   adminNotes?: string | null;
+  shortenedUrlId?: string | null; // Added for relationship
 }
 
 interface LoadingStates {
@@ -310,21 +311,97 @@ export default function AdminDashboard() {
       } else if (actionModal.actionType === 'soft_delete') {
         updateData.deletedAt = new Date().toISOString();
         updateData.deletedReason = 'admin_action';
+        
+        // Update the underlying ShortenedUrl status to inactive
+        if (report.shortenedUrlId) {
+          try {
+            await client.models.ShortenedUrl.update({
+              id: report.shortenedUrlId,
+              status: 'inactive'
+            });
+            console.log('Updated ShortenedUrl status to inactive for:', report.shortenedUrlId);
+            
+            // 🔧 FIX: Update ALL ReportedLink records for this shortened URL
+            const relatedReports = await client.models.ReportedLink.list({
+              filter: { shortenedUrlId: { eq: report.shortenedUrlId } }
+            });
+            
+            if (relatedReports.data) {
+              const updatePromises = relatedReports.data.map(relatedReport => 
+                client.models.ReportedLink.update({
+                  id: relatedReport.id,
+                  deletedAt: updateData.deletedAt,
+                  deletedReason: updateData.deletedReason,
+                  updatedAt: new Date().toISOString(),
+                })
+              );
+              
+              await Promise.all(updatePromises);
+              console.log(`Updated ${relatedReports.data.length} related reports for soft delete`);
+            }
+          } catch (urlError) {
+            console.error('Failed to update ShortenedUrl status or related reports:', urlError);
+            throw new Error('Failed to deactivate the shortened URL and related reports');
+          }
+        }
       } else if (actionModal.actionType === 'restore') {
         updateData.deletedAt = null;
         updateData.deletedReason = null;
+        
+        // Update the underlying ShortenedUrl status to active
+        if (report.shortenedUrlId) {
+          try {
+            await client.models.ShortenedUrl.update({
+              id: report.shortenedUrlId,
+              status: 'active'
+            });
+            console.log('Updated ShortenedUrl status to active for:', report.shortenedUrlId);
+            
+            // 🔧 FIX: Update ALL ReportedLink records for this shortened URL
+            const relatedReports = await client.models.ReportedLink.list({
+              filter: { shortenedUrlId: { eq: report.shortenedUrlId } }
+            });
+            
+            if (relatedReports.data) {
+              const updatePromises = relatedReports.data.map(relatedReport => 
+                client.models.ReportedLink.update({
+                  id: relatedReport.id,
+                  deletedAt: null,
+                  deletedReason: null,
+                  updatedAt: new Date().toISOString(),
+                })
+              );
+              
+              await Promise.all(updatePromises);
+              console.log(`Updated ${relatedReports.data.length} related reports for restore`);
+            }
+          } catch (urlError) {
+            console.error('Failed to update ShortenedUrl status or related reports:', urlError);
+            throw new Error('Failed to reactivate the shortened URL and related reports');
+          }
+        }
       } else if (actionModal.actionType === 'add_note') {
         if (!actionNotes.trim()) return;
         updateData.adminNotes = actionNotes.trim();
+        
+        // For add_note, only update the specific report
+        await client.models.ReportedLink.update({
+          id: report.id,
+          ...updateData,
+          updatedAt: new Date().toISOString(),
+        });
       }
 
-      if (Object.keys(updateData).length === 0) return;
-
-      await client.models.ReportedLink.update({
-        id: report.id,
-        ...updateData,
-        updatedAt: new Date().toISOString(),
-      });
+      // For status_change, only update the specific report
+      if (actionModal.actionType === 'status_change') {
+        if (Object.keys(updateData).length === 0) return;
+        
+        await client.models.ReportedLink.update({
+          id: report.id,
+          ...updateData,
+          updatedAt: new Date().toISOString(),
+        });
+      }
 
       // Log the admin action
       if (user?.signInDetails?.loginId) {
@@ -338,18 +415,46 @@ export default function AdminDashboard() {
         });
       }
 
-      // Update local state
-      setAllReportedLinks(prev =>
-        prev.map(link =>
-          link.id === report.id
-            ? { ...link, ...updateData, updatedAt: new Date().toISOString() }
-            : link
-        )
-      );
+      // 🔧 FIX: Update local state for ALL related reports when soft deleting/restoring
+      if (actionModal.actionType === 'soft_delete' || actionModal.actionType === 'restore') {
+        setAllReportedLinks(prev =>
+          prev.map(link => {
+            // Update all reports that share the same shortenedUrlId
+            if (link.shortenedUrlId === report.shortenedUrlId) {
+              return {
+                ...link,
+                deletedAt: updateData.deletedAt,
+                deletedReason: updateData.deletedReason,
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return link;
+          })
+        );
 
-      // Update selected report if it's the one being updated
-      if (selectedReport?.id === report.id) {
-        setSelectedReport(prev => prev ? { ...prev, ...updateData, updatedAt: new Date().toISOString() } : null);
+        // Update selected report if it's related to the same shortened URL
+        if (selectedReport?.shortenedUrlId === report.shortenedUrlId) {
+          setSelectedReport(prev => prev ? {
+            ...prev,
+            deletedAt: updateData.deletedAt,
+            deletedReason: updateData.deletedReason,
+            updatedAt: new Date().toISOString()
+          } : null);
+        }
+      } else {
+        // For other actions, only update the specific report
+        setAllReportedLinks(prev =>
+          prev.map(link =>
+            link.id === report.id
+              ? { ...link, ...updateData, updatedAt: new Date().toISOString() }
+              : link
+          )
+        );
+
+        // Update selected report if it's the one being updated
+        if (selectedReport?.id === report.id) {
+          setSelectedReport(prev => prev ? { ...prev, ...updateData, updatedAt: new Date().toISOString() } : null);
+        }
       }
 
       setError(null);

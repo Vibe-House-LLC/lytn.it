@@ -166,9 +166,11 @@ function AuthSection({ onShowAuth }: { onShowAuth: () => void }) {
               <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer opacity-50" disabled>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Profile Settings</span>
+          <DropdownMenuItem asChild>
+            <Link href="/profile" className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Profile Settings</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={signOut} className="cursor-pointer">
