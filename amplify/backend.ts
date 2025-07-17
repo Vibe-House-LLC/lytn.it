@@ -16,6 +16,12 @@ export const backend = defineBackend({
   userManagement,
 });
 
+// Grant the userManagement function access to the auth resource
+(backend.userManagement.resources.lambda as any).addEnvironment(
+  'AMPLIFY_AUTH_USERPOOL_ID', 
+  backend.auth.resources.userPool.userPoolId
+);
+
 const emailReportedLinkLambda = backend.emailReportedLink.resources.lambda
 const userManagementLambda = backend.userManagement.resources.lambda
 
