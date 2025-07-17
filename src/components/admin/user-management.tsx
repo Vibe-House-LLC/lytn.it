@@ -13,6 +13,28 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 
+interface UserAttribute {
+  Name: string;
+  Value: string;
+}
+
+interface Group {
+  groupName: string;
+}
+
+interface ResetPasswordData {
+  password: string;
+  temporary: boolean;
+}
+
+interface UserDetailsResponse {
+  data: {
+    user: User;
+    groups: Group[];
+    profile: UserProfile;
+  };
+}
+
 interface User {
   username: string;
   email: string;
@@ -21,7 +43,7 @@ interface User {
   enabled: boolean;
   createdDate: string;
   lastModifiedDate: string;
-  attributes?: any[];
+  attributes?: UserAttribute[];
 }
 
 interface UserProfile {
@@ -156,7 +178,7 @@ export default function UserManagement() {
   const fetchUserDetails = async (userId: string): Promise<UserWithProfile | null> => {
     try {
       const response = await fetch(`/api/admin/users/${userId}`);
-      const data = await response.json();
+      const data = await response.json() as UserDetailsResponse & { error?: string };
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch user details');
@@ -164,7 +186,7 @@ export default function UserManagement() {
 
       return {
         ...data.data.user,
-        groups: data.data.groups.map((g: any) => g.groupName),
+        groups: data.data.groups.map((g: Group) => g.groupName),
         profile: data.data.profile,
       };
     } catch (error) {
@@ -173,7 +195,7 @@ export default function UserManagement() {
     }
   };
 
-  const handleUserAction = async (userId: string, action: string, additionalData?: any) => {
+  const handleUserAction = async (userId: string, action: string, additionalData?: ResetPasswordData) => {
     setLoadingStates(prev => ({ ...prev, [`${userId}-${action}`]: true }));
 
     try {
@@ -337,7 +359,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     fetchUsers(true);
-  }, [searchTerm]);
+  }, [searchTerm, fetchUsers]);
 
   const formatDate = (dateString: string): string => {
     try {
