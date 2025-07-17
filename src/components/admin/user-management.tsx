@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -186,18 +186,6 @@ export default function UserManagement() {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ enabled: action === 'enable' }),
-          });
-          break;
-        
-        case 'make-admin':
-          response = await fetch(`/api/admin/users/${userId}/make-admin`, {
-            method: 'POST',
-          });
-          break;
-        
-        case 'remove-admin':
-          response = await fetch(`/api/admin/users/${userId}/make-admin`, {
-            method: 'DELETE',
           });
           break;
         
@@ -633,25 +621,7 @@ export default function UserManagement() {
                               Reset Password
                             </DropdownMenuItem>
                             
-                            <DropdownMenuSeparator />
-                            
-                            {user.groups?.includes('admins') ? (
-                              <DropdownMenuItem 
-                                onClick={() => handleUserAction(user.username, 'remove-admin')}
-                                disabled={loadingStates[`${user.username}-remove-admin`]}
-                              >
-                                Remove Admin
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem 
-                                onClick={() => handleUserAction(user.username, 'make-admin')}
-                                disabled={loadingStates[`${user.username}-make-admin`]}
-                              >
-                                Make Admin
-                              </DropdownMenuItem>
-                            )}
-                            
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />                            
                             
                             <DropdownMenuItem 
                               onClick={() => {
