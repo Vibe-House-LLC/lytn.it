@@ -1,6 +1,7 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { vainId } from '../functions/vainId/resource';
 import { emailReportedLink } from '../functions/emailReportedLink/resource';
+import { userManagement } from '../functions/userManagement/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -33,15 +34,15 @@ const schema = a.schema({
   ]),
 
   ReportStatus: a.enum([
-    'pending', 
-    'reviewed', 
-    'resolved', 
+    'pending',
+    'reviewed',
+    'resolved',
     'dismissed'
   ]),
 
   DeletionReason: a.enum([
     'spam',
-    'inappropriate_content', 
+    'inappropriate_content',
     'copyright_violation',
     'malware',
     'user_request',
@@ -65,10 +66,18 @@ const schema = a.schema({
   ReportDeletionReason: a.enum([
     'spam',
     'inappropriate_content',
-    'copyright_violation', 
+    'copyright_violation',
     'user_request',
     'admin_action',
     'resolved'
+  ]),
+
+  AdminActionType: a.enum([
+    'status_change',
+    'soft_delete',
+    'restore',
+    'add_note',
+    'update_fields'
   ]),
 
   emailReportedLink: a.query()
@@ -86,10 +95,28 @@ const schema = a.schema({
     .query()
     .arguments({})
     .returns(a.ref('vainIdReturn'))
-    .authorization((allow) => [allow.guest(), allow.authenticated()])
-    .handler(a.handler.function(vainId)),
+    .handler(a.handler.function(vainId))
+    .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
-  shortenedUrl: a.model({
+  userManagement: a
+    .query()
+    .arguments({
+      operation: a.string().required(),
+      userId: a.string(),
+      email: a.string(),
+      password: a.string(),
+      temporary: a.boolean(),
+      attributes: a.json(),
+      groupName: a.string(),
+      limit: a.integer(),
+      nextToken: a.string(),
+      filter: a.string()
+    })
+    .returns(a.json())
+    .authorization((allow) => [allow.group('admins')])
+    .handler(a.handler.function(userManagement)),
+
+  ShortenedUrl: a.model({
     id: a.id().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
@@ -138,11 +165,11 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    owner: a.string().authorization(allow => [allow.owner().to(['read', 'delete']), allow.group('admins')]),
-    reports: a.hasMany('reportedLink', 'shortenedUrlId'),
+    owner: a.string().authorization(allow => [allow.owner().to(['read', 'create']), allow.group('admins')]),
+    reports: a.hasMany('ReportedLink', 'shortenedUrlId'),
   })
     .secondaryIndexes((index) => [
-      index("owner").sortKeys(["createdAt"]),
+      index("owner").sortKeys(["createdAt"]).queryField('listShortenedUrlByOwnerAndCreatedAt'),
       index("status").sortKeys(["createdAt"]),
       index("source").sortKeys(["createdAt"]),
       index("ip").sortKeys(["createdAt"]),
@@ -154,7 +181,7 @@ const schema = a.schema({
       allow.group('admins')
     ]),
 
-  reportedLink: a.model({
+  ReportedLink: a.model({
     id: a.id().authorization(allow => [
       allow.guest().to(['create', 'read']),
       allow.authenticated().to(['create', 'read']),
@@ -245,9 +272,23 @@ const schema = a.schema({
       allow.group('admins'),
       allow.owner().to(['create', 'read'])
     ]),
-    shortenedUrl: a.belongsTo('shortenedUrl', 'shortenedUrlId'),
+    shortenedUrl: a.belongsTo('ShortenedUrl', 'shortenedUrlId'),
+    lastAdminAction: a.ref('AdminActionType').authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    lastAdminEmail: a.email().authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    adminNotes: a.string().authorization(allow => [
+      allow.group('admins'),
+      allow.owner().to(['read'])
+    ]),
+    actionLogs: a.hasMany('AdminActionLog', 'reportedLinkId'),
   })
     .secondaryIndexes((index) => [
+      index("owner").sortKeys(["createdAt"]).queryField('listReportedLinkByOwnerAndCreatedAt'),
       index("reporterEmail").sortKeys(["createdAt"]),
       index("status").sortKeys(["createdAt"]),
       index("reason").sortKeys(["createdAt"]),
@@ -257,6 +298,115 @@ const schema = a.schema({
       allow.guest().to(['create']),
       allow.authenticated().to(['create']),
       allow.owner().to(['create', 'read']),
+      allow.group('admins')
+    ]),
+
+  AdminActionLog: a.model({
+    id: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    reportedLinkId: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    reportedLink: a.belongsTo('ReportedLink', 'reportedLinkId'),
+    actionType: a.ref('AdminActionType').authorization(allow => [
+      allow.group('admins')
+    ]),
+    adminEmail: a.email().authorization(allow => [
+      allow.group('admins')
+    ]),
+    adminUserId: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    previousValue: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    newValue: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    notes: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.group('admins')
+    ]),
+  })
+    .secondaryIndexes((index) => [
+      index("reportedLinkId").sortKeys(["createdAt"]),
+      index("adminEmail").sortKeys(["createdAt"]),
+      index("actionType").sortKeys(["createdAt"]),
+    ])
+    .authorization((allow) => [
+      allow.group('admins')
+    ]),
+
+  UserProfile: a.model({
+    id: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    userId: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    email: a.email().authorization(allow => [
+      allow.group('admins')
+    ]),
+    displayName: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    isActive: a.boolean().default(true).authorization(allow => [
+      allow.group('admins')
+    ]),
+    lastLoginAt: a.datetime().authorization(allow => [
+      allow.group('admins')
+    ]),
+    createdAt: a.datetime().authorization(allow => [
+      allow.group('admins')
+    ]),
+    createdBy: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    linksCreated: a.integer().default(0).authorization(allow => [
+      allow.group('admins')
+    ]),
+    reportsSubmitted: a.integer().default(0).authorization(allow => [
+      allow.group('admins')
+    ]),
+    userSessions: a.hasMany('UserSession', 'userId'),
+  })
+    .secondaryIndexes((index) => [
+      index("userId").sortKeys(["createdAt"]),
+      index("email").sortKeys(["createdAt"]),
+    ])
+    .authorization((allow) => [
+      allow.group('admins')
+    ]),
+
+  UserSession: a.model({
+    id: a.id().authorization(allow => [
+      allow.group('admins')
+    ]),
+    userId: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    userProfile: a.belongsTo('UserProfile', 'userId'),
+    loginAt: a.datetime().authorization(allow => [
+      allow.group('admins')
+    ]),
+    ipAddress: a.ipAddress().authorization(allow => [
+      allow.group('admins')
+    ]),
+    userAgent: a.string().authorization(allow => [
+      allow.group('admins')
+    ]),
+    sessionDuration: a.integer().authorization(allow => [
+      allow.group('admins')
+    ]),
+  })
+    .secondaryIndexes((index) => [
+      index("userId").sortKeys(["loginAt"]),
+      index("ipAddress").sortKeys(["loginAt"]),
+    ])
+    .authorization((allow) => [
       allow.group('admins')
     ]),
 
@@ -270,7 +420,8 @@ const schema = a.schema({
     ])
 })
   .authorization((allow) => [
-    allow.resource(vainId)
+    allow.resource(vainId),
+    allow.resource(userManagement),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;

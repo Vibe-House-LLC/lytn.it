@@ -9,7 +9,7 @@ const client = generateClient<Schema>({authMode: 'identityPool'});
 
 export default async function getLink(id: string) {
     try {
-        const result = await client.models.shortenedUrl.get({ id }, { 
+        const result = await client.models.ShortenedUrl.get({ id }, { 
             selectionSet: ['destination', 'status', 'deletedAt'] 
         });
         

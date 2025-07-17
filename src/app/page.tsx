@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import ShortenUrl from '@/components/shorten-url';
-import AuthButton from '@/components/auth-button';
 import ReportLink from '@/components/report-link';
 
 export default function Home() {
@@ -18,11 +17,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white overflow-hidden relative" style={{ minWidth: '400px' }}>
-      {/* Header with Auth Button */}
-      <header className="absolute top-0 right-0 z-10 p-4">
-        <AuthButton />
-      </header>
-      
       <div id="gradient" className="h-full w-full">
         <div className="flex flex-col items-center justify-center h-full pb-20">
           <div id="main" className="text-[#6e6e6e] w-full min-h-[550px] h-full">

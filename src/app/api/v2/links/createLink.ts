@@ -1,36 +1,33 @@
-import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/api";
-import { Schema } from "../../../../../amplify/data/resource";
-import amplifyConfig from "../../../../../amplify_outputs.json";
+import { cookiesClient, runWithAmplifyServerContext } from "@/utilities/amplify-utils";
+import { getCurrentUser } from "aws-amplify/auth/server";
+import { cookies } from 'next/headers';
 
-// Configure Amplify with the same config as the Lambda function
-Amplify.configure(amplifyConfig);
 
-const client = generateClient<Schema>({authMode: 'identityPool'});
+const client = cookiesClient;
 
 /**
  * Validate and clean IP address for schema validation
  */
 function validateIpAddress(ip?: string): string | undefined {
     if (!ip) return undefined;
-    
+
     // Handle common localhost addresses
     if (ip === '::1' || ip === '127.0.0.1' || ip === 'localhost') {
         return '127.0.0.1';
     }
-    
+
     // Basic IPv4 validation
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (ipv4Regex.test(ip)) {
         return ip;
     }
-    
+
     // Basic IPv6 validation (simplified)
     const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
     if (ipv6Regex.test(ip)) {
         return ip;
     }
-    
+
     // If IP is invalid, return undefined instead of failing
     console.log(`Invalid IP address format: ${ip}, skipping IP field`);
     return undefined;
@@ -71,7 +68,7 @@ async function hasConflict(id: string): Promise<boolean> {
         return true;
     }
     try {
-        const result = await client.models.shortenedUrl.get({ id });
+        const result = await client.models.ShortenedUrl.get({ id });
         const hasConflict = !!result.data;
         console.log(`Conflict check for ID "${id}": ${hasConflict ? 'CONFLICT' : 'NO CONFLICT'}`);
         if (hasConflict) {
@@ -92,9 +89,26 @@ interface CreateLinkParams {
 }
 
 export default async function createLink({ url, clientIp, source = 'user_created' }: CreateLinkParams): Promise<string> {
+    let loggedIn: 'identityPool' | 'userPool' = 'identityPool';
+    try {
+        const userDetails = await runWithAmplifyServerContext({
+            nextServerContext: { cookies },
+            operation: (contextSpec) => getCurrentUser(contextSpec)
+        });
+
+        console.log('userDetails:', userDetails);
+
+        loggedIn = 'userPool';
+
+        console.log('loggedIn:', loggedIn);
+    } catch (error) {
+        console.error('Error getting user details:', error);
+        loggedIn = 'identityPool';
+    }
+
     try {
         console.log('Shorten handler called with event:', JSON.stringify(url, null, 2));
-        
+
         if (!url) {
             console.error('No URL provided');
             throw new Error('URL parameter is required');
@@ -105,7 +119,7 @@ export default async function createLink({ url, clientIp, source = 'user_created
 
         const cleanedUrl = cleanUrl(url);
         console.log('Cleaned URL:', cleanedUrl);
-        
+
         if (!meetsUrlRequirements(cleanedUrl)) {
             console.error('URL does not meet requirements:', cleanedUrl);
             throw new Error('URL does not meet requirements');
@@ -120,15 +134,18 @@ export default async function createLink({ url, clientIp, source = 'user_created
         while (true) {
             attempts++;
 
-            generatedId = (await client.queries.vainId({}))?.data?.id || '';
-            
+            const vainId = await client.queries.vainId({}, { authMode: loggedIn });
+            console.log('vainId:', vainId);
+
+            generatedId = vainId?.data?.id || '';
+
             const conflict = await hasConflict(generatedId);
             if (!conflict) {
                 console.log(`SUCCESS: No conflict with ${generatedId} after ${attempts} attempts`);
                 break;
             } else {
                 console.log(`CONFLICT: ${generatedId} already exists, trying again...`);
-                
+
                 if (attempts >= maxAttempts) {
                     console.error(`FAILED: Unable to generate unique ID after ${maxAttempts} attempts`);
                     throw new Error(`Unable to generate unique ID after maximum attempts (${maxAttempts})`);
@@ -166,14 +183,14 @@ export default async function createLink({ url, clientIp, source = 'user_created
         if (validatedIp) {
             recordData.ip = validatedIp;
         }
-        
+
         // Owner field will be automatically populated by AWS AppSync based on authenticated user context
 
         console.log('Creating database record...');
         console.log('Record data to create:', recordData);
-        
+
         // Create shortened URL record
-        const newRecord = await client.models.shortenedUrl.create(recordData);
+        const newRecord = await client.models.ShortenedUrl.create(recordData, { authMode: loggedIn });
 
         console.log('Database record created:', JSON.stringify(newRecord, null, 2));
         console.log('newRecord.data:', newRecord.data);
