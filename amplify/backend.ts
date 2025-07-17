@@ -16,38 +16,11 @@ export const backend = defineBackend({
   userManagement,
 });
 
-// Grant the userManagement function access to the auth resource
-(backend.userManagement.resources.lambda as any).addEnvironment(
-  'AMPLIFY_AUTH_USERPOOL_ID', 
-  backend.auth.resources.userPool.userPoolId
-);
-
 const emailReportedLinkLambda = backend.emailReportedLink.resources.lambda
-const userManagementLambda = backend.userManagement.resources.lambda
 
 const emailStatement = new PolicyStatement({
   actions: ['ses:SendEmail'],
   resources: ['*'],
 })
 
-const cognitoStatement = new PolicyStatement({
-  actions: [
-    'cognito-idp:AdminGetUser',
-    'cognito-idp:AdminCreateUser',
-    'cognito-idp:AdminUpdateUserAttributes',
-    'cognito-idp:AdminAddUserToGroup',
-    'cognito-idp:AdminRemoveUserFromGroup',
-    'cognito-idp:AdminDeleteUser',
-    'cognito-idp:AdminEnableUser',
-    'cognito-idp:AdminDisableUser',
-    'cognito-idp:AdminSetUserPassword',
-    'cognito-idp:AdminResetUserPassword',
-    'cognito-idp:ListUsers',
-    'cognito-idp:ListUsersInGroup',
-    'cognito-idp:AdminListGroupsForUser',
-  ],
-  resources: ['*'],
-})
-
 emailReportedLinkLambda.addToRolePolicy(emailStatement)
-userManagementLambda.addToRolePolicy(cognitoStatement)
