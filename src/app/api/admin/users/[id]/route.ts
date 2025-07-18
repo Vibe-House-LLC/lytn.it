@@ -31,7 +31,7 @@ async function verifyAdminAccess(): Promise<boolean> {
 // GET /api/admin/users/[id] - Get user details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAdmin = await verifyAdminAccess();
@@ -39,7 +39,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { id: userId } = params;
+    const { id: userId } = await params;
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -75,7 +75,7 @@ export async function GET(
     // Get user profile if exists
     let userProfile = null;
     try {
-      const profileResult = await cookiesClient.models.userProfile.list({
+      const profileResult = await cookiesClient.models.UserProfile.list({
         filter: { userId: { eq: userId } },
         limit: 1,
       });
@@ -105,7 +105,7 @@ export async function GET(
 // PUT /api/admin/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAdmin = await verifyAdminAccess();
@@ -113,7 +113,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { id: userId } = params;
+    const { id: userId } = await params;
     const body = await request.json();
     const { attributes, enabled } = body;
 
@@ -158,13 +158,13 @@ export async function PUT(
 
       // Update user profile if exists
       try {
-        const profileResult = await cookiesClient.models.userProfile.list({
+        const profileResult = await cookiesClient.models.UserProfile.list({
           filter: { userId: { eq: userId } },
           limit: 1,
         });
         
         if (profileResult.data[0]) {
-          await cookiesClient.models.userProfile.update({
+          await cookiesClient.models.UserProfile.update({
             id: profileResult.data[0].id,
             isActive: enabled,
           });
@@ -191,7 +191,7 @@ export async function PUT(
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAdmin = await verifyAdminAccess();
@@ -199,7 +199,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { id: userId } = params;
+    const { id: userId } = await params;
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -224,22 +224,22 @@ export async function DELETE(
     // Clean up user profile and related data
     try {
       // Delete user profile
-      const profileResult = await cookiesClient.models.userProfile.list({
+      const profileResult = await cookiesClient.models.UserProfile.list({
         filter: { userId: { eq: userId } },
         limit: 1,
       });
       
       if (profileResult.data[0]) {
-        await cookiesClient.models.userProfile.delete({ id: profileResult.data[0].id });
+        await cookiesClient.models.UserProfile.delete({ id: profileResult.data[0].id });
       }
 
       // Delete user sessions
-      const sessionsResult = await cookiesClient.models.userSession.list({
+      const sessionsResult = await cookiesClient.models.UserSession.list({
         filter: { userId: { eq: userId } },
       });
       
       for (const session of sessionsResult.data) {
-        await cookiesClient.models.userSession.delete({ id: session.id });
+        await cookiesClient.models.UserSession.delete({ id: session.id });
       }
     } catch (error) {
       console.error('Failed to clean up user data:', error);

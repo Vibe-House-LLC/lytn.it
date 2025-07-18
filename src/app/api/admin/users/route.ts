@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
 
     // Create user profile record for tracking
     try {
-      await cookiesClient.models.userProfile.create({
+      await cookiesClient.models.UserProfile.create({
         userId: email,
         email,
         displayName: attributes.name || email,

@@ -31,7 +31,7 @@ async function verifyAdminAccess(): Promise<boolean> {
 // POST /api/admin/users/[id]/reset-password - Reset user password
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAdmin = await verifyAdminAccess();
@@ -39,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
     }
 
-    const { id: userId } = params;
+    const { id: userId } = await params;
     const body = await request.json();
     const { password, temporary = true } = body;
 
@@ -81,7 +81,7 @@ export async function POST(
     });
 
     try {
-      await cookiesClient.models.adminActionLog.create({
+      await cookiesClient.models.AdminActionLog.create({
         actionType: 'add_note',
         adminEmail: currentUser?.signInDetails?.loginId || 'unknown',
         adminUserId: currentUser?.userId || 'unknown',
