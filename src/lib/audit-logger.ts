@@ -9,7 +9,7 @@ interface AuditLogEntry {
   userAgent?: string;
   success: boolean;
   errorMessage?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 class AuditLogger {
@@ -33,10 +33,10 @@ class AuditLogger {
     console.log('[ADMIN_AUDIT]', JSON.stringify(logEntry));
     
     // Optional: Send to external logging service
-    this.sendToExternalLogger(logEntry);
+    this.sendToExternalLogger();
   }
 
-  private async sendToExternalLogger(entry: AuditLogEntry) {
+  private async sendToExternalLogger() {
     try {
       // Example: Send to CloudWatch Logs, Datadog, or similar
       // await fetch('/api/logging/audit', {
@@ -180,7 +180,7 @@ export async function logAdminAction({
   request?: Request;
   success: boolean;
   errorMessage?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }) {
   const requestInfo = request ? getRequestInfo(request) : { ipAddress: 'unknown', userAgent: 'unknown' };
   

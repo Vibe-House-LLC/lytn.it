@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { runWithAmplifyServerContext } from '@/utilities/amplify-utils';
 import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
-import { getCurrentUser } from 'aws-amplify/auth/server';
+
 import { fetchAuthSession } from 'aws-amplify/auth/server';
 import type { Schema } from '../../../../../../amplify/data/resource';
 import outputs from '../../../../../../amplify_outputs.json';
