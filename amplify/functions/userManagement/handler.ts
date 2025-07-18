@@ -11,8 +11,9 @@ import { CognitoIdentityProviderClient,
          AdminSetUserPasswordCommand,
          AdminListGroupsForUserCommand,
          ListUsersInGroupCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { env } from '$amplify/env/userManagement';
 
-const cognitoClient = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+const cognitoClient = new CognitoIdentityProviderClient({ region: env.AWS_REGION });
 
 export interface UserManagementInput {
   operation: 'listUsers' | 'getUser' | 'createUser' | 'updateUser' | 'deleteUser' | 
@@ -42,16 +43,16 @@ export const handler = async (event: any): Promise<UserManagementOutput> => {
   console.log('[UserManagement] Event keys:', Object.keys(event || {}));
   console.log('[UserManagement] Event.arguments:', event?.arguments);
   console.log('[UserManagement] Environment variables:', {
-    AMPLIFY_AUTH_USERPOOL_ID: process.env.AMPLIFY_AUTH_USERPOOL_ID,
-    AWS_REGION: process.env.AWS_REGION,
-    allEnvVars: Object.keys(process.env).filter(key => key.includes('AMPLIFY') || key.includes('AWS'))
+    AMPLIFY_AUTH_USERPOOL_ID: env.AMPLIFY_AUTH_USERPOOL_ID,
+    AWS_REGION: env.AWS_REGION,
+    allEnvVars: Object.keys(env).filter(key => key.includes('AMPLIFY') || key.includes('AWS'))
   });
   
   // Extract arguments from GraphQL event structure if needed
   const actualEvent: UserManagementInput = event.arguments || event;
   console.log('[UserManagement] Actual event to process:', JSON.stringify(actualEvent, null, 2));
   
-  const userPoolId = process.env.AMPLIFY_AUTH_USERPOOL_ID;
+  const userPoolId = env.AMPLIFY_AUTH_USERPOOL_ID;
   
   if (!userPoolId) {
     console.error('[UserManagement] User pool ID not configured');

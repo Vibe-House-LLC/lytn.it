@@ -12,6 +12,7 @@ export const auth = defineAuth({
   },
   groups: ['admins'],
   access: (allow) => [
-    allow.resource(emailReportedLink).to(['listUsersInGroup'])
+    allow.resource(emailReportedLink).to(['listUsersInGroup']),
+    allow.resource(userManagement).to(['getUser', 'createUser', 'updateUserAttributes', 'addUserToGroup', 'removeUserFromGroup', 'deleteUser', 'enableUser', 'disableUser', 'setUserPassword', 'resetUserPassword', 'listUsers', 'listUsersInGroup', 'listGroupsForUser'])
   ]
 });
