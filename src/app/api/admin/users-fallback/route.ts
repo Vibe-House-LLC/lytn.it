@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { runWithAmplifyServerContext } from '@/utilities/amplify-utils';
 import { fetchAuthSession } from 'aws-amplify/auth/server';
@@ -33,7 +33,7 @@ async function verifyAdminAccess(): Promise<boolean> {
 }
 
 // GET /api/admin/users-fallback - Mock users list for testing
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('[API:UsersFallback] GET request started');
     

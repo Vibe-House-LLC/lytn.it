@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[DEBUG] Starting debug endpoint');
     
-    const debugInfo: any = {
+    const debugInfo: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
       url: request.url,
       headers: Object.fromEntries(request.headers.entries()),

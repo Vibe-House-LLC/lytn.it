@@ -6,7 +6,7 @@ import { updatePassword } from 'aws-amplify/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User, Lock, Mail, Calendar, LayoutDashboard, Settings } from 'lucide-react';
+import { User, Lock, Mail, LayoutDashboard, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -64,11 +64,11 @@ export default function ProfilePage() {
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password change error:', error);
       setPasswordMessage({
         type: 'error',
-        text: error.message || 'Failed to update password. Please try again.'
+        text: error instanceof Error ? error.message : 'Failed to update password. Please try again.'
       });
     } finally {
       setIsChangingPassword(false);

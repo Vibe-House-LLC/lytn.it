@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { runWithAmplifyServerContext } from '@/utilities/amplify-utils';
 import { getCurrentUser } from 'aws-amplify/auth/server';
 import { fetchAuthSession } from 'aws-amplify/auth/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('[CHECK-USER] Starting user check...');
     
