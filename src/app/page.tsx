@@ -43,7 +43,7 @@ export default function Home() {
                       className="absolute w-full bottom-0 m-0 text-[#467291] text-center leading-none"
                       style={{ 
                         fontFamily: 'var(--font-dosis)', 
-                        fontSize: '150px',
+                        fontSize: 'min(125px, 80vw)',
                         fontWeight: 600,
                         bottom: '15px'
                       }}
