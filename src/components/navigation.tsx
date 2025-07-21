@@ -52,35 +52,35 @@ export default function Navigation() {
       {/* Auth Modal */}
       {showAuthenticator && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-8 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-end items-center mb-6">
-              <button
-                onClick={() => setShowAuthenticator(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl leading-none cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="amplify-authenticator-container flex justify-center">
-              <Authenticator>
-                {({ signOut, user }) => (
-                  <div className="text-center">
-                    <p className="mb-4">Welcome, {user?.signInDetails?.loginId}!</p>
-                    <Button 
-                      onClick={() => {
-                        signOut?.();
-                        setShowAuthenticator(false);
-                      }} 
-                      variant="outline"
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
-                )}
-              </Authenticator>
-            </div>
+        <div className="bg-white rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-end items-center mb-0">
+            <button
+              onClick={() => setShowAuthenticator(false)}
+              className="text-gray-500 hover:text-gray-700 text-l leading-none cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="amplify-authenticator-container flex justify-center">
+            <Authenticator>
+              {({ signOut, user }) => (
+                <div className="text-center">
+                  <p className="mb-4">Welcome, {user?.signInDetails?.loginId}!</p>
+                  <Button 
+                    onClick={() => {
+                      signOut?.();
+                      setShowAuthenticator(false);
+                    }} 
+                    variant="outline"
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              )}
+            </Authenticator>
           </div>
         </div>
+      </div>
       )}
 
       <style jsx global>{`
