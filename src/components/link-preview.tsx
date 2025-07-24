@@ -6,7 +6,10 @@ import ReportLink from './report-link';
 
 // Custom hook for auto-sizing text
 const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: number = 12) => {
-    const [fontSize, setFontSize] = useState(maxFontSize);
+    // Start with a more reasonable initial size to reduce content shift
+    const initialSize = Math.min(maxFontSize, 60); // Start smaller to reduce jump
+    const [fontSize, setFontSize] = useState(initialSize);
+    const [isCalculated, setIsCalculated] = useState(false);
     const textRef = useRef<HTMLHeadingElement>(null);
 
     useEffect(() => {
@@ -82,13 +85,17 @@ const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: nu
             });
             
             setFontSize(finalSize);
+            setIsCalculated(true);
         };
 
-        // Adjust on mount and text change with small delay to ensure DOM is ready
-        const timeoutId = setTimeout(adjustFontSize, 100);
+        // Reduce timeout delay and ensure calculation happens quickly
+        const timeoutId = setTimeout(adjustFontSize, 10);
 
         // Adjust on window resize
-        const handleResize = () => adjustFontSize();
+        const handleResize = () => {
+            setIsCalculated(false);
+            setTimeout(adjustFontSize, 10);
+        };
         window.addEventListener('resize', handleResize);
 
         return () => {
@@ -97,7 +104,7 @@ const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: nu
         };
     }, [text, maxFontSize, minFontSize]);
 
-    return { fontSize, textRef };
+    return { fontSize, textRef, isCalculated };
 };
 
 interface LinkPreviewProps {
@@ -123,7 +130,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     
     // Auto-sizing for the main heading - use actual short URL
     const headingText = `lytn.it/${id}`;
-    const { fontSize, textRef } = useAutoSizeText(headingText, 80, 12);
+    const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 120, 12);
 
     // Handle client-side only content to prevent hydration issues
     useEffect(() => {
@@ -214,6 +221,9 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                         fontFamily: 'var(--font-dosis)', 
                                         fontSize: `${fontSize}px`,
                                         fontWeight: 600,
+                                        opacity: isCalculated ? 1 : 0,
+                                        transition: 'opacity 0.15s ease-in-out',
+                                        minHeight: '60px' // Prevent layout shift
                                     }}
                                 >
                                     {headingText}

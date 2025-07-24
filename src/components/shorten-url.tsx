@@ -7,7 +7,10 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 
 // Custom hook for auto-sizing text
 const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: number = 16) => {
-    const [fontSize, setFontSize] = useState(maxFontSize);
+    // Start with a more reasonable initial size to reduce content shift
+    const initialSize = Math.min(maxFontSize, 40); // Start smaller to reduce jump
+    const [fontSize, setFontSize] = useState(initialSize);
+    const [isCalculated, setIsCalculated] = useState(false);
     const textRef = useRef<HTMLAnchorElement>(null);
 
     useEffect(() => {
@@ -74,14 +77,16 @@ const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: nu
             });
             
             setFontSize(finalSize);
+            setIsCalculated(true);
         };
 
-        // Adjust on mount and text change with small delay to ensure DOM is ready
-        const timeoutId = setTimeout(adjustFontSize, 200);
+        // Reduce timeout delay for faster calculation
+        const timeoutId = setTimeout(adjustFontSize, 50);
 
         // Adjust on window resize
         const handleResize = () => {
-            setTimeout(adjustFontSize, 100);
+            setIsCalculated(false);
+            setTimeout(adjustFontSize, 50);
         };
         window.addEventListener('resize', handleResize);
 
@@ -91,7 +96,7 @@ const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: nu
         };
     }, [text, maxFontSize, minFontSize]);
 
-    return { fontSize, textRef };
+    return { fontSize, textRef, isCalculated };
 };
 
 export default function ShortenUrl() {
@@ -108,7 +113,7 @@ export default function ShortenUrl() {
     const displayUrl = shortenedUrl ? shortenedUrl.replace(/^https?:\/\//, '') : '';
     
     // Auto-sizing for the shortened URL
-    const { fontSize, textRef } = useAutoSizeText(displayUrl, 60, 16);
+    const { fontSize, textRef, isCalculated } = useAutoSizeText(displayUrl, 60, 16);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -182,14 +187,14 @@ export default function ShortenUrl() {
         <div className="w-full text-center px-4 sm:px-6 lg:px-8">
             <form 
                 onSubmit={handleSubmit} 
-                className="w-full max-w-2xl mx-auto"
+                className="w-full max-w-4xl mx-auto"
             >
                 {/* Text Input */}
                 <input
                     id="textbox"
                     type="text"
-                    className="relative w-[90%] sm:w-[90%] max-w-lg h-[60px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] mx-auto text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out] box-border block"
-                    style={{ fontSize: '20px' }}
+                    className="relative w-[90%] sm:w-[85%] md:w-[80%] lg:w-[100%] h-[60px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] mx-auto text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out] box-border block"
+                    style={{ fontSize: '20px', maxWidth: '1000px' }}
                     name="link"
                     placeholder="https://"
                     value={url}
@@ -225,7 +230,7 @@ export default function ShortenUrl() {
             {/* Result Display */}
             <div 
                 id="result" 
-                className={`${shortenedUrl || error ? 'block animate-[fadeIn_0.5s_ease-out]' : 'hidden'} max-w-2xl mx-auto`}
+                className={`${shortenedUrl || error ? 'block animate-[fadeIn_0.5s_ease-out]' : 'hidden'} max-w-4xl mx-auto`}
             >
                 {/* Error Message - No copy button */}
                 {error && !shortenedUrl && (
@@ -236,7 +241,7 @@ export default function ShortenUrl() {
                 
                 {/* Success Result - With copy button */}
                 {shortenedUrl && !error && (
-                    <div className="flex items-center justify-center gap-2 mt-4 px-4">
+                    <div className="flex items-center justify-center gap-2 mt-4 px-4" style={{ minHeight: '40px' }}>
                         <div className="relative">
                             <Button
                                 variant="ghost"
@@ -267,7 +272,9 @@ export default function ShortenUrl() {
                             className="font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline cursor-pointer break-all"
                             style={{ 
                                 fontFamily: 'var(--font-dosis)',
-                                fontSize: `${fontSize * 0.75}pt` // Convert px to pt (approximate conversion)
+                                fontSize: `${fontSize * 0.75}pt`, // Convert px to pt (approximate conversion)
+                                opacity: isCalculated ? 1 : 0,
+                                transition: 'opacity 0.15s ease-in-out'
                             }}
                         >
                             {displayUrl}
