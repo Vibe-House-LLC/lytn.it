@@ -4,6 +4,102 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { trackForward } from '@/lib/tracking';
 import ReportLink from './report-link';
 
+// Custom hook for auto-sizing text
+const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: number = 12) => {
+    const [fontSize, setFontSize] = useState(maxFontSize);
+    const textRef = useRef<HTMLHeadingElement>(null);
+
+    useEffect(() => {
+        if (!textRef.current) return;
+
+        const adjustFontSize = () => {
+            const element = textRef.current;
+            if (!element) return;
+
+            // Create a temporary element to measure text
+            const tempElement = document.createElement('span');
+            tempElement.style.fontFamily = 'var(--font-dosis)';
+            tempElement.style.fontWeight = '600';
+            tempElement.style.visibility = 'hidden';
+            tempElement.style.position = 'absolute';
+            tempElement.style.whiteSpace = 'nowrap';
+            tempElement.textContent = text;
+            
+            document.body.appendChild(tempElement);
+
+            // Calculate optimal font size based on available space
+            // Account for max-w-4xl (1024px) with more generous padding calculations
+            const isMobile = window.innerWidth < 768;
+            const maxContainerWidth = Math.min(1024, window.innerWidth);
+            
+            // Account for px-6 (24px each side) + additional margins and potential scrollbars
+            // On mobile, add extra padding to prevent edge clipping
+            const basePadding = 48; // px-6 = 24px each side
+            const extraBuffer = isMobile ? 48 : 32; // More buffer on mobile
+            const totalPadding = basePadding + extraBuffer;
+            const availableWidth = maxContainerWidth - totalPadding;
+            
+            // Use larger buffer for very long domains to ensure proper spacing
+            // More aggressive on mobile due to limited space
+            const buffer = isMobile 
+                ? (text.length > 25 ? 0.8 : text.length > 15 ? 0.85 : 0.9)
+                : (text.length > 30 ? 0.85 : text.length > 20 ? 0.9 : 0.95);
+            const containerWidth = availableWidth * buffer;
+            
+            let currentSize = maxFontSize;
+            tempElement.style.fontSize = `${currentSize}px`;
+            
+            // Reduce font size until text fits within container
+            while (tempElement.scrollWidth > containerWidth && currentSize > minFontSize) {
+                currentSize -= 1; // Smaller decrements for finer control
+                tempElement.style.fontSize = `${currentSize}px`;
+            }
+
+            // Additional reduction for longer text to maintain visual balance
+            const textLength = text.length;
+            if (textLength > 25) {
+                currentSize = Math.max(currentSize * 0.8, minFontSize);
+            } else if (textLength > 20) {
+                currentSize = Math.max(currentSize * 0.85, minFontSize);
+            } else if (textLength > 15) {
+                currentSize = Math.max(currentSize * 0.9, minFontSize);
+            }
+
+            document.body.removeChild(tempElement);
+            
+            const finalSize = Math.max(currentSize, minFontSize);
+            console.log('Auto-sizing debug:', {
+                text,
+                textLength: text.length,
+                isMobile,
+                containerWidth,
+                availableWidth,
+                totalPadding,
+                buffer,
+                calculatedSize: currentSize,
+                finalSize,
+                windowWidth: window.innerWidth
+            });
+            
+            setFontSize(finalSize);
+        };
+
+        // Adjust on mount and text change with small delay to ensure DOM is ready
+        const timeoutId = setTimeout(adjustFontSize, 100);
+
+        // Adjust on window resize
+        const handleResize = () => adjustFontSize();
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [text, maxFontSize, minFontSize]);
+
+    return { fontSize, textRef };
+};
+
 interface LinkPreviewProps {
     id: string;
     destination: string;
@@ -24,6 +120,10 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     const [autoforwardEnabled, setAutoforwardEnabled] = useState(true);
     const [isTextTruncated, setIsTextTruncated] = useState(false);
     const urlTextRef = useRef<HTMLParagraphElement>(null);
+    
+    // Auto-sizing for the main heading - use actual short URL
+    const headingText = `lytn.it/${id}`;
+    const { fontSize, textRef } = useAutoSizeText(headingText, 80, 12);
 
     // Handle client-side only content to prevent hydration issues
     useEffect(() => {
@@ -95,7 +195,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-white overflow-hidden relative" style={{ minWidth: '400px' }}>
+        <div className="min-h-screen bg-white overflow-hidden relative">
             <div className="flex flex-col items-center justify-center h-full pb-20">
                 <div className="text-[#6e6e6e] w-full min-h-[550px] h-full">
                     <div 
@@ -108,14 +208,15 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <h1 
-                                        className="text-[#467291] text-center leading-none mb-6 hover:text-[#5a8eb2] transition-colors"
+                                    ref={textRef}
+                                    className="text-[#467291] text-center leading-none mb-6 hover:text-[#5a8eb2] transition-colors"
                                     style={{ 
                                         fontFamily: 'var(--font-dosis)', 
-                                        fontSize: '150px',
+                                        fontSize: `${fontSize}px`,
                                         fontWeight: 600,
                                     }}
                                 >
-                                    lytn.it/{id}
+                                    {headingText}
                                 </h1>
                                 <div className="flex justify-center mb-4">
                                     <svg 

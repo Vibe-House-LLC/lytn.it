@@ -1,9 +1,98 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { useAuthenticator } from '@aws-amplify/ui-react';
+
+// Custom hook for auto-sizing text
+const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: number = 16) => {
+    const [fontSize, setFontSize] = useState(maxFontSize);
+    const textRef = useRef<HTMLAnchorElement>(null);
+
+    useEffect(() => {
+        if (!textRef.current || !text) return;
+
+        const adjustFontSize = () => {
+            const element = textRef.current;
+            if (!element) return;
+
+            // Get the actual container (the flex div that contains both copy button and link)
+            const container = element.parentElement;
+            if (!container) return;
+
+            // Get the copy button element
+            const copyButtonContainer = container.querySelector('div.relative');
+            const copyButtonWidth = copyButtonContainer ? copyButtonContainer.getBoundingClientRect().width : 40;
+
+            // Calculate available width more accurately
+            const containerRect = container.getBoundingClientRect();
+            const gap = 8; // gap-2 between copy button and link
+            const buffer = 20; // Safety buffer
+            
+            const availableWidth = containerRect.width - copyButtonWidth - gap - buffer;
+
+            // Create a temporary element to measure text
+            const tempElement = document.createElement('span');
+            tempElement.style.fontFamily = 'var(--font-dosis)';
+            tempElement.style.fontWeight = '600';
+            tempElement.style.visibility = 'hidden';
+            tempElement.style.position = 'absolute';
+            tempElement.style.whiteSpace = 'nowrap';
+            tempElement.textContent = text;
+            
+            document.body.appendChild(tempElement);
+            
+            let currentSize = maxFontSize;
+            tempElement.style.fontSize = `${currentSize}px`;
+            
+            // Reduce font size until text fits within available space
+            while (tempElement.scrollWidth > availableWidth && currentSize > minFontSize) {
+                currentSize -= 2;
+                tempElement.style.fontSize = `${currentSize}px`;
+            }
+
+            // Additional reduction for longer text to maintain visual balance
+            const textLength = text.length;
+            if (textLength > 15) {
+                currentSize = Math.max(currentSize * 0.85, minFontSize);
+            } else if (textLength > 12) {
+                currentSize = Math.max(currentSize * 0.9, minFontSize);
+            }
+
+            document.body.removeChild(tempElement);
+            
+            const finalSize = Math.max(currentSize, minFontSize);
+            console.log('Auto-sizing debug:', {
+                text,
+                textLength: text.length,
+                containerWidth: containerRect.width,
+                copyButtonWidth,
+                availableWidth,
+                calculatedSize: currentSize,
+                finalSize
+            });
+            
+            setFontSize(finalSize);
+        };
+
+        // Adjust on mount and text change with small delay to ensure DOM is ready
+        const timeoutId = setTimeout(adjustFontSize, 200);
+
+        // Adjust on window resize
+        const handleResize = () => {
+            setTimeout(adjustFontSize, 100);
+        };
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [text, maxFontSize, minFontSize]);
+
+    return { fontSize, textRef };
+};
 
 export default function ShortenUrl() {
     const [url, setUrl] = useState('');
@@ -14,6 +103,12 @@ export default function ShortenUrl() {
     
     // Get current user if authenticated
     const { user } = useAuthenticator((context) => [context.user]);
+
+    // Remove protocol for display
+    const displayUrl = shortenedUrl ? shortenedUrl.replace(/^https?:\/\//, '') : '';
+    
+    // Auto-sizing for the shortened URL
+    const { fontSize, textRef } = useAutoSizeText(displayUrl, 60, 16);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,20 +178,17 @@ export default function ShortenUrl() {
         }
     };
 
-    // Remove protocol for display
-    const displayUrl = shortenedUrl ? shortenedUrl.replace(/^https?:\/\//, '') : '';
-
     return (
-        <div className="w-full text-center">
+        <div className="w-full text-center px-4 sm:px-6 lg:px-8">
             <form 
                 onSubmit={handleSubmit} 
-                className="w-full"
+                className="w-full max-w-2xl mx-auto"
             >
                 {/* Text Input */}
                 <input
                     id="textbox"
                     type="text"
-                    className="relative w-[90%] h-[60px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out]"
+                    className="relative w-[90%] sm:w-[90%] max-w-lg h-[60px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] mx-auto text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out] box-border block"
                     style={{ fontSize: '20px' }}
                     name="link"
                     placeholder="https://"
@@ -133,18 +225,18 @@ export default function ShortenUrl() {
             {/* Result Display */}
             <div 
                 id="result" 
-                className={`${shortenedUrl || error ? 'block animate-[fadeIn_0.5s_ease-out]' : 'hidden'}`}
+                className={`${shortenedUrl || error ? 'block animate-[fadeIn_0.5s_ease-out]' : 'hidden'} max-w-2xl mx-auto`}
             >
                 {/* Error Message - No copy button */}
                 {error && !shortenedUrl && (
-                    <p className="text-red-600 text-center mt-4 text-base">
+                    <p className="text-red-600 text-center mt-4 text-base px-4">
                         {error}
                     </p>
                 )}
                 
                 {/* Success Result - With copy button */}
                 {shortenedUrl && !error && (
-                    <div className="flex items-center justify-center gap-2 mt-4">
+                    <div className="flex items-center justify-center gap-2 mt-4 px-4">
                         <div className="relative">
                             <Button
                                 variant="ghost"
@@ -168,11 +260,15 @@ export default function ShortenUrl() {
                             )}
                         </div>
                         <a 
+                            ref={textRef}
                             href={shortenedUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[28pt] font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline cursor-pointer"
-                            style={{ fontFamily: 'var(--font-dosis)' }}
+                            className="font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline cursor-pointer break-all"
+                            style={{ 
+                                fontFamily: 'var(--font-dosis)',
+                                fontSize: `${fontSize * 0.75}pt` // Convert px to pt (approximate conversion)
+                            }}
                         >
                             {displayUrl}
                         </a>
