@@ -141,24 +141,85 @@ export default function UserDashboard() {
     const lytnUrl = `https://lytn.it/${linkId}`;
     
     try {
-      // Try modern Clipboard API first
-      if (navigator.clipboard && window.isSecureContext) {
+      // iOS Safari specific handling
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      
+      // Try modern Clipboard API first - but be more careful with iOS
+      if (navigator.clipboard && window.isSecureContext && !isIOS) {
         await navigator.clipboard.writeText(lytnUrl);
         setCopiedId(linkId);
         setCopySuccess(`Copied: ${lytnUrl}`);
       } else {
-        // Fallback for older browsers or non-HTTPS contexts
+        // Save current scroll position to prevent viewport jumping
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const currentScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        
+        // Enhanced fallback that works better on iOS and Android
         const textArea = document.createElement('textarea');
         textArea.value = lytnUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
         
-        const successful = document.execCommand('copy');
+        // Better positioning that prevents scroll issues
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        textArea.style.width = '1px';
+        textArea.style.height = '1px';
+        textArea.style.opacity = '0';
+        textArea.style.pointerEvents = 'none';
+        textArea.style.zIndex = '-1';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        
+        // Prevent any layout shifts or focus behaviors
+        textArea.setAttribute('readonly', '');
+        textArea.setAttribute('tabindex', '-1');
+        textArea.style.webkitUserSelect = 'text';
+        textArea.style.userSelect = 'text';
+        textArea.style.webkitAppearance = 'none';
+        
+        document.body.appendChild(textArea);
+        
+        let successful = false;
+        
+        // For iOS, we need to handle selection differently
+        if (isIOS) {
+          const range = document.createRange();
+          range.selectNodeContents(textArea);
+          const selection = window.getSelection();
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+          textArea.setSelectionRange(0, 999999);
+          
+          // Try clipboard API again for iOS if available (newer iOS versions)
+          if (navigator.clipboard && window.isSecureContext) {
+            try {
+              await navigator.clipboard.writeText(lytnUrl);
+              successful = true;
+            } catch {
+              // Fall back to execCommand
+              successful = document.execCommand('copy');
+            }
+          } else {
+            successful = document.execCommand('copy');
+          }
+        } else {
+          // For Android and other platforms, avoid focus() to prevent scroll jumping
+          textArea.select();
+          textArea.setSelectionRange(0, 99999);
+          successful = document.execCommand('copy');
+        }
+        
         document.body.removeChild(textArea);
+        
+        // Restore scroll position to prevent viewport jumping
+        if (isAndroid || (!isIOS && (currentScrollTop !== 0 || currentScrollLeft !== 0))) {
+          window.scrollTo(currentScrollLeft, currentScrollTop);
+        }
         
         if (successful) {
           setCopiedId(linkId);
@@ -249,7 +310,13 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 pt-0 max-w-6xl">
+    <div className="container mx-auto px-4 py-6 pt-0 max-w-6xl"
+         style={{
+           WebkitOverflowScrolling: 'touch',
+           touchAction: 'pan-y',
+           WebkitTransform: 'translateZ(0)',
+           transform: 'translateZ(0)'
+         }}>
       <div className="space-y-6">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">My Dashboard</h1>
@@ -258,9 +325,15 @@ export default function UserDashboard() {
           </p>
         </div>
 
-        {/* Copy Success Toast */}
+        {/* Copy Success Toast - iOS optimized positioning */}
         {copySuccess && (
-          <div className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-sm">
+          <div className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-sm transform-gpu will-change-transform"
+               style={{ 
+                 WebkitTransform: 'translateZ(0)',
+                 transform: 'translateZ(0)',
+                 WebkitBackfaceVisibility: 'hidden',
+                 backfaceVisibility: 'hidden'
+               }}>
             <div className="flex items-center gap-2">
               <CheckIcon className="text-green-600" />
               <span className="text-sm font-medium break-all">{copySuccess}</span>
@@ -322,21 +395,29 @@ export default function UserDashboard() {
             <nav className="-mb-px flex">
               <button
                 onClick={() => setActiveTab('links')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none ${
+                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none touch-manipulation ${
                   activeTab === 'links'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                style={{ 
+                  WebkitTouchCallout: 'none',
+                  touchAction: 'manipulation'
+                }}
               >
                 My Links ({links.length})
               </button>
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none ${
+                className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none touch-manipulation ${
                   activeTab === 'reports'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                style={{ 
+                  WebkitTouchCallout: 'none',
+                  touchAction: 'manipulation'
+                }}
               >
                 Reports ({reports.length})
               </button>
@@ -389,7 +470,12 @@ export default function UserDashboard() {
                             variant="outline"
                             size="sm"
                             onClick={() => copyToClipboard(link.id)}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 touch-manipulation"
+                            style={{ 
+                              WebkitTouchCallout: 'none',
+                              WebkitUserSelect: 'none',
+                              touchAction: 'manipulation'
+                            }}
                             disabled={copiedId === link.id}
                           >
                             {copiedId === link.id ? (
