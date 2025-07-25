@@ -40,7 +40,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50">
+    <div className="min-h-dvh bg-gray-50 ios-safe-bottom">
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Dashboard Toggle */}
         {isAdmin && (

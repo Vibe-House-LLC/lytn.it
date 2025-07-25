@@ -251,3 +251,15 @@
     -webkit-transform: translateZ(0);
   }
 }
+
+/* iOS Safari bottom navigation bar padding */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ios-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+}
+
+/* Fallback for non-iOS devices or older browsers */
+.ios-safe-bottom {
+  padding-bottom: 1rem;
+}
