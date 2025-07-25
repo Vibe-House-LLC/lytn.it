@@ -174,11 +174,68 @@ export default function ShortenUrl() {
     const handleCopy = async () => {
         if (shortenedUrl) {
             try {
-                await navigator.clipboard.writeText(shortenedUrl);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                
+                // Try modern Clipboard API first - works on modern iOS Safari 13.4+
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(shortenedUrl);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                        return;
+                    } catch (clipboardError) {
+                        console.log('Clipboard API failed, falling back to manual method:', clipboardError);
+                        // Fall through to manual method
+                    }
+                }
+                
+                // Fallback method for older browsers or when clipboard API fails
+                const textArea = document.createElement('textarea');
+                textArea.value = shortenedUrl;
+                
+                // Position the textarea off-screen
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '-9999px';
+                textArea.style.opacity = '0';
+                textArea.style.pointerEvents = 'none';
+                textArea.setAttribute('readonly', '');
+                textArea.setAttribute('tabindex', '-1');
+                
+                document.body.appendChild(textArea);
+                
+                let successful = false;
+                
+                if (isIOS) {
+                    // iOS-specific selection handling
+                    const range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    const selection = window.getSelection();
+                    if (selection) {
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                    textArea.setSelectionRange(0, 999999);
+                    successful = document.execCommand('copy');
+                } else {
+                    // Standard selection for other platforms
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999);
+                    successful = document.execCommand('copy');
+                }
+                
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } else {
+                    throw new Error('Copy command failed');
+                }
             } catch (err) {
                 console.error('Failed to copy:', err);
+                // You might want to show a user-friendly error message here
+                // For example: setError('Failed to copy to clipboard. Please try selecting and copying manually.');
             }
         }
     };
