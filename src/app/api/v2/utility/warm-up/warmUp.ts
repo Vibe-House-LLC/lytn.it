@@ -6,7 +6,7 @@ const client = cookiesClient;
 
 const warmUp = async () => {
     const authMode = await getClientAuthType()
-    const vainId = await client.queries.vainId({ warmup: true}, { authMode });
+    const vainId = await client.queries.vainId({ warmup: true }, { authMode });
     return vainId;
 }
 
