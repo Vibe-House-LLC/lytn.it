@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -21,6 +21,20 @@ export default function Navigation() {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const [showAuthenticator, setShowAuthenticator] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const { user } = useAuthenticator((context) => [context.user]);
+
+  // Auto-close modal when user becomes authenticated
+  useEffect(() => {
+    if (user && showAuthenticator) {
+      setIsAuthenticating(true);
+      // Small delay to show spinner before closing
+      setTimeout(() => {
+        setShowAuthenticator(false);
+        setIsAuthenticating(false);
+      }, 500);
+    }
+  }, [user, showAuthenticator]);
 
   return (
     <>
@@ -68,22 +82,33 @@ export default function Navigation() {
             </button>
           </div>
           <div className="amplify-authenticator-container flex justify-center">
-            <Authenticator>
-              {({ signOut, user }) => (
-                <div className="text-center">
-                  <p className="mb-4">Welcome, {user?.signInDetails?.loginId}!</p>
-                  <Button 
-                    onClick={() => {
-                      signOut?.();
-                      setShowAuthenticator(false);
-                    }} 
-                    variant="outline"
-                  >
-                    Sign Out
-                  </Button>
+            {isAuthenticating ? (
+              <div className="text-center py-8">
+                <div className="flex justify-center items-center mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#467291]"></div>
                 </div>
-              )}
-            </Authenticator>
+                <p className="text-gray-600">Signing you in...</p>
+              </div>
+            ) : (
+              <Authenticator>
+                {({ signOut }) => (
+                  <div className="text-center">
+                    <div className="flex justify-center items-center mb-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#467291]"></div>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        signOut?.();
+                        setShowAuthenticator(false);
+                      }} 
+                      variant="outline"
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                )}
+              </Authenticator>
+            )}
           </div>
         </div>
       </div>
