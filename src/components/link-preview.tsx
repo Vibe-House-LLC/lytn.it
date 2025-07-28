@@ -129,7 +129,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     const urlTextRef = useRef<HTMLParagraphElement>(null);
     
     // Auto-sizing for the main heading - use actual short URL
-    const headingText = `lytn.it/${id}`;
+    const headingText = `${currentHost}/${id}`;
     const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 120, 12);
 
     // Handle client-side only content to prevent hydration issues
