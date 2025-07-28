@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import ShortenUrl from '@/components/shorten-url';
 import ReportLink from '@/components/report-link';
+import { useEffect } from 'react';
+import { generateClient } from 'aws-amplify/api';
+import { Schema } from '../../amplify/data/resource';
+
+const client = generateClient<Schema>({ authMode: 'userPool' });
 
 export default function Home() {
   const [showReportModal, setShowReportModal] = useState(false);
@@ -14,6 +19,14 @@ export default function Home() {
     // Hide success message after 5 seconds
     setTimeout(() => setReportSuccess(false), 5000);
   };
+
+  useEffect(() => {
+    client.queries.vainId({ warmup: true }).then((response) => {
+      console.log(response);
+    }).catch((error) => {
+      console.error(error);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white overflow-hidden relative">

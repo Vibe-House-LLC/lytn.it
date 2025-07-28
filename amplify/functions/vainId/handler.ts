@@ -140,7 +140,13 @@ async function getIteration(): Promise<number> {
     }
 }
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+    const { warmup } = event.arguments;
+
+    if (warmup) {
+        return null;
+    }
+
     try {
         const iteration = await getIteration();
         const id = generateId(iteration, SEED);
