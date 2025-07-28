@@ -11,8 +11,14 @@ export default function AuthButton() {
   return (
     <>
       {showAuthenticator && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0">
-          <div className="bg-white rounded-lg p-8 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0"
+          onClick={() => setShowAuthenticator(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-8 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-end items-center mb-6">
               {/* <h2 className="text-xl font-semibold">Sign In</h2> */}
               <button

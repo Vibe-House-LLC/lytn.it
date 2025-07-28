@@ -51,8 +51,14 @@ export default function Navigation() {
 
       {/* Auth Modal */}
       {showAuthenticator && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAuthenticator(false)}
+        >
+        <div 
+          className="bg-white rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex justify-end items-center mb-0">
             <button
               onClick={() => setShowAuthenticator(false)}
