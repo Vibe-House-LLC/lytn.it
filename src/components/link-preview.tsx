@@ -183,16 +183,16 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
 
     // Countdown timer for auto-forwarding
     useEffect(() => {
-        if (countdown > 0 && autoforwardEnabled) {
+        if (countdown > 0 && autoforwardEnabled && !showReportModal) {
             const timer = setTimeout(() => {
                 setCountdown(countdown - 1);
             }, 1000);
             return () => clearTimeout(timer);
-        } else if (countdown === 0 && autoforwardEnabled) {
+        } else if (countdown === 0 && autoforwardEnabled && !showReportModal) {
             // Auto-forward when countdown reaches 0
             handleDestinationClick();
         }
-    }, [countdown, autoforwardEnabled, handleDestinationClick]);
+    }, [countdown, autoforwardEnabled, showReportModal, handleDestinationClick]);
 
     const handleReportSuccess = () => {
         setShowReportModal(false);
