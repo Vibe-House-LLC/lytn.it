@@ -202,9 +202,9 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-white overflow-hidden relative">
+        <div className="min-h-screen bg-background overflow-hidden relative">
             <div className="flex flex-col items-center justify-center h-full pb-20">
-                <div className="text-[#6e6e6e] w-full min-h-[550px] h-full">
+                <div className="text-muted-foreground w-full min-h-[550px] h-full">
                     <div 
                         className="absolute w-full transform -translate-y-1/2"
                         style={{ 
@@ -216,7 +216,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             <div className="text-center mb-8">
                                 <h1 
                                     ref={textRef}
-                                    className="text-[#467291] text-center leading-none mb-6 hover:text-[#5a8eb2] transition-colors"
+                                    className="text-[#467291] dark:text-primary text-center leading-none mb-6 hover:text-[#5a8eb2] dark:hover:text-primary/80 transition-colors"
                                     style={{ 
                                         fontFamily: 'var(--font-dosis)', 
                                         fontSize: `${fontSize}px`,
@@ -230,7 +230,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                 </h1>
                                 <div className="flex justify-center mb-4">
                                     <svg 
-                                        className="w-12 h-12 text-[#467291]" 
+                                        className="w-12 h-12 text-[#467291] dark:text-primary" 
                                         fill="none" 
                                         stroke="currentColor" 
                                         viewBox="0 0 24 24"
@@ -259,11 +259,11 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
 
                                                         {/* Destination URL Card */}
                             <div className="mb-12 flex justify-center">
-                                <div className="bg-gray-100 px-6 py-3 hover:bg-gray-200 transition-all cursor-pointer max-w-2xl min-w-0">
+                                <div className="bg-muted px-6 py-3 hover:bg-muted/80 transition-all cursor-pointer max-w-2xl min-w-0">
                                     {/* Redirects to label */}
                                     <div className="mb-3">
                                         <span 
-                                            className="text-sm text-gray-500 font-medium"
+                                            className="text-sm text-muted-foreground font-medium"
                                             style={{ fontFamily: 'var(--font-ubuntu)' }}
                                         >
                                             Redirects to:
@@ -275,7 +275,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                     >
                                         <p 
                                             ref={urlTextRef}
-                                            className={`text-xl font-medium text-gray-700 min-w-0 ${showFullUrl ? 'break-all' : 'truncate'}`}
+                                            className={`text-xl font-medium text-foreground min-w-0 ${showFullUrl ? 'break-all' : 'truncate'}`}
                                             style={{ fontFamily: 'var(--font-ubuntu-mono)' }}
                                         >
                                             {destination}
@@ -288,7 +288,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                                     e.stopPropagation();
                                                     setShowFullUrl(!showFullUrl);
                                                 }}
-                                                className="text-sm text-[#467291] hover:text-[#5a8eb2] flex items-center gap-1"
+                                                className="text-sm text-[#467291] hover:text-[#5a8eb2] dark:text-primary dark:hover:text-primary/80 flex items-center gap-1"
                                                 style={{ fontFamily: 'var(--font-ubuntu)' }}
                                             >
                                                 {showFullUrl ? 'Show less' : 'Show full URL'}
@@ -323,7 +323,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                     />
                                     <label 
                                         htmlFor="autoforward-checkbox"
-                                        className="text-sm text-gray-600 cursor-pointer leading-none"
+                                        className="text-sm text-muted-foreground cursor-pointer leading-none"
                                         style={{ fontFamily: 'var(--font-ubuntu)', fontWeight: 600 }}
                                     >
                                         {autoforwardEnabled 
@@ -333,7 +333,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                                     </label>
                                     <button
                                         onClick={handleDestinationClick}
-                                        className="text-[#467291] hover:text-[#5a8eb2] underline cursor-pointer text-sm leading-none flex items-center"
+                                        className="text-[#467291] hover:text-[#5a8eb2] dark:text-primary dark:hover:text-primary/80 underline cursor-pointer text-sm leading-none flex items-center"
                                         style={{ fontFamily: 'var(--font-ubuntu)', fontWeight: 600 }}
                                     >
                                         {autoforwardEnabled ? 'Skip Wait' : 'Redirect Now'}
@@ -359,11 +359,11 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
             
             {/* Footer */}
             <div 
-                className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-[#d4d4d4]"
+                className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground"
                 style={{ fontFamily: 'var(--font-ubuntu)' }}
             >
-                <div className="text-[11px] w-full text-center text-[#d4d4d4]">
-                    © {currentYear} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black cursor-pointer">Vibe House LLC</a>
+                <div className="text-[11px] w-full text-center text-muted-foreground">
+                    © {currentYear} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
                 </div>
             </div>
 

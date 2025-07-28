@@ -584,7 +584,7 @@ export default function LinkImporter() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{validationResult.totalLinks}</div>
+                                  <div className="text-2xl font-bold text-[#467291]">{validationResult.totalLinks}</div>
                 <div className="text-sm text-gray-600">Total Links</div>
               </div>
               <div className="text-center">
@@ -689,7 +689,7 @@ export default function LinkImporter() {
                 <div className="text-xs text-gray-600">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">{importStats.processed}</div>
+                                  <div className="text-lg font-bold text-[#467291]">{importStats.processed}</div>
                 <div className="text-xs text-gray-600">Processed</div>
               </div>
               <div className="text-center">
@@ -784,7 +784,7 @@ export default function LinkImporter() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 min-h-screen">
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
             <div className="flex flex-col items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#467291] mb-4"></div>
               <div className="text-lg font-medium text-gray-900">Processing Import...</div>
               <div className="text-sm text-gray-600 mt-2 text-center">
                 Please wait while we import your links

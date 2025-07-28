@@ -63,7 +63,7 @@ export default async function ForwardPage({ params }: PageProps) {
                     </p>
                     <Link 
                         href="/" 
-                        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
+                        className="inline-block bg-[#467291] text-white px-6 py-3 rounded-md hover:bg-[#3a5c79] transition-colors"
                     >
                         Create a New Short Link
                     </Link>
@@ -105,7 +105,7 @@ export default async function ForwardPage({ params }: PageProps) {
                     </p>
                     <Link 
                         href="/" 
-                        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
+                        className="inline-block bg-[#467291] text-white px-6 py-3 rounded-md hover:bg-[#3a5c79] transition-colors"
                     >
                         Create a New Short Link
                     </Link>

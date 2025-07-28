@@ -250,7 +250,7 @@ export default function ShortenUrl() {
                 <input
                     id="textbox"
                     type="text"
-                    className="relative w-[90%] sm:w-[85%] md:w-[80%] lg:w-[100%] h-[60px] bg-white border border-[#b0b0b0] rounded-[4px] mt-[10px] mx-auto text-left outline-none text-[#6e6e6e] bg-transparent px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out] box-border block"
+                    className="relative w-[90%] sm:w-[85%] md:w-[80%] lg:w-[100%] h-[60px] bg-input border border-border rounded-[4px] mt-[10px] mx-auto text-left outline-none text-foreground px-[10px] py-0 font-light animate-[fadeIn_1s_ease-out] box-border block focus:border-ring focus:ring-2 focus:ring-ring/20 transition-colors"
                     style={{ fontSize: '20px', maxWidth: '1000px' }}
                     name="link"
                     placeholder="https://"
@@ -265,7 +265,7 @@ export default function ShortenUrl() {
                 <div className="flex justify-center mt-[20px]">
                     <button 
                         type="submit"
-                        className="bg-[#467291] rounded-[4px] border border-[#5d5d5d] text-white px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center transition-all duration-200 cursor-pointer w-[175px] h-[55px] hover:bg-white hover:text-[#467291] animate-[fadeInUp_1s_ease-out]"
+                        className="bg-[#467291] dark:bg-primary rounded-[4px] border border-border text-white dark:text-primary-foreground px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center transition-all duration-200 cursor-pointer w-[175px] h-[55px] hover:bg-background hover:text-[#467291] dark:hover:text-primary hover:border-[#467291] dark:hover:border-primary animate-[fadeInUp_1s_ease-out]"
                         style={{ 
                             fontFamily: 'var(--font-roboto-condensed)',
                             letterSpacing: '2pt',
@@ -307,7 +307,7 @@ export default function ShortenUrl() {
                                 className={`h-10 w-10 hover:bg-transparent p-0 ml-[-12px] cursor-pointer transition-colors duration-200 ${
                                     copied 
                                         ? 'text-green-600 hover:text-green-700' 
-                                        : 'text-[#467291] hover:text-[#5a8eb2]'
+                                        : 'text-[#467291] hover:text-[#5a8eb2] dark:text-primary dark:hover:text-primary/80'
                                 }`}
                                 title={copied ? 'Copied!' : 'Copy to clipboard'}
                             >
@@ -315,9 +315,9 @@ export default function ShortenUrl() {
                             </Button>
                             {/* Custom tooltip */}
                             {copied && (
-                                <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-3 py-1 rounded-md whitespace-nowrap animate-[fadeIn_0.2s_ease-out]">
+                                <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground text-sm px-3 py-1 rounded-md whitespace-nowrap animate-[fadeIn_0.2s_ease-out] border border-border shadow-md">
                                     Link copied!
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-800"></div>
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-popover"></div>
                                 </div>
                             )}
                         </div>
@@ -326,7 +326,7 @@ export default function ShortenUrl() {
                             href={shortenedUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-[#467291] hover:text-[#5a8eb2] no-underline cursor-pointer break-all"
+                            className="font-semibold text-[#467291] hover:text-[#5a8eb2] dark:text-primary dark:hover:text-primary/80 no-underline cursor-pointer break-all"
                             style={{ 
                                 fontFamily: 'var(--font-dosis)',
                                 fontSize: `${fontSize * 0.75}pt`, // Convert px to pt (approximate conversion)

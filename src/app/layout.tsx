@@ -3,6 +3,9 @@ import { Dosis, Roboto_Condensed, Ubuntu, Ubuntu_Mono } from "next/font/google";
 import "./globals.css";
 import AmplifySetup from "@/utilities/amplifySetup";
 import Navigation from "@/components/navigation";
+import { ThemeProvider } from "@/components/theme-provider";
+
+
 
 const dosis = Dosis({
   variable: "--font-dosis",
@@ -42,15 +45,47 @@ export default function RootLayout({
   return (
     <>
     <AmplifySetup>
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const systemQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                  const systemPrefersDark = systemQuery.matches;
+                  const storedTheme = localStorage.getItem('lytn-theme');
+                  
+                  let shouldBeDark = false;
+                  
+                  if (!storedTheme || storedTheme === 'system') {
+                    shouldBeDark = systemPrefersDark;
+                  } else {
+                    shouldBeDark = storedTheme === 'dark';
+                  }
+                  
+                  if (shouldBeDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                  
+                } catch (e) {
+                  console.error('Theme detection error:', e);
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
       >
-        <Navigation />
-        {children}
+        <ThemeProvider>
+          <Navigation />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
     </AmplifySetup>
