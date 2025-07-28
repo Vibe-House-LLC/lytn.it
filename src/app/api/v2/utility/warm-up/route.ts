@@ -10,4 +10,4 @@ export async function GET() {
         console.error('API route error:', error);
         return Response.json({ error: 'Internal server error' }, { status: 500 });
     }
-} 
+}
