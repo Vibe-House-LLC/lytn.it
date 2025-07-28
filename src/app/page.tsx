@@ -4,10 +4,6 @@ import { useState } from 'react';
 import ShortenUrl from '@/components/shorten-url';
 import ReportLink from '@/components/report-link';
 import { useEffect } from 'react';
-import { generateClient } from 'aws-amplify/api';
-import { Schema } from '../../amplify/data/resource';
-
-const client = generateClient<Schema>({ authMode: 'userPool' });
 
 export default function Home() {
   const [showReportModal, setShowReportModal] = useState(false);
@@ -21,11 +17,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    client.queries.vainId({ warmup: true }).then((response) => {
-      console.log(response);
-    }).catch((error) => {
-      console.error(error);
-    });
+    fetch('/api/v2/utility/warm-up');
   }, []);
 
   return (
