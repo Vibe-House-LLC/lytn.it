@@ -200,4 +200,66 @@
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
+  
+  /* iOS specific fixes for scrolling and touch */
+  html {
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+  }
+  
+  /* Improve button touch targets on iOS */
+  button,
+  [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    min-height: 44px; /* iOS recommended touch target size */
+  }
+  
+  /* Optimize scrollable containers */
+  .container,
+  [data-scroll] {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  /* Fix for fixed positioned elements on iOS */
+  .fixed {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+}
+
+/* iOS Safari bottom navigation bar padding */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ios-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 3rem);
+  }
+}
+
+/* Fallback for non-iOS devices or older browsers */
+.ios-safe-bottom {
+  padding-bottom: 3rem;
 }

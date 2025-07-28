@@ -16,7 +16,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden relative" style={{ minWidth: '400px' }}>
+    <div className="min-h-screen bg-white overflow-hidden relative">
       <div id="gradient" className="h-full w-full">
         <div className="flex flex-col items-center justify-center h-full pb-20">
           <div id="main" className="text-[#6e6e6e] w-full min-h-[550px] h-full">
@@ -33,9 +33,8 @@ export default function Home() {
                   {/* Logo */}
                   <div 
                     id="logo" 
-                    className="relative mb-0 mx-auto bg-no-repeat bg-center bg-bottom animate-[fadeInDown_1s_ease-out]"
+                    className="relative mb-0 mx-auto bg-no-repeat bg-center bg-bottom animate-[fadeInDown_1s_ease-out] w-full max-w-[371px]"
                     style={{
-                      width: '371px',
                       height: '207px'
                     }}
                   >
@@ -43,7 +42,7 @@ export default function Home() {
                       className="absolute w-full bottom-0 m-0 text-[#467291] text-center leading-none"
                       style={{ 
                         fontFamily: 'var(--font-dosis)', 
-                        fontSize: 'min(125px, 80vw)',
+                        fontSize: 'min(115px, 80vw)',
                         fontWeight: 600,
                         bottom: '15px'
                       }}
