@@ -3,6 +3,7 @@ import { Dosis, Roboto_Condensed, Ubuntu, Ubuntu_Mono } from "next/font/google";
 import "./globals.css";
 import AmplifySetup from "@/utilities/amplifySetup";
 import Navigation from "@/components/navigation";
+import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 
 
@@ -77,11 +78,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}>
+      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased min-h-dvh flex flex-col`}>
         <AmplifySetup>
           <ThemeProvider>
             <Navigation />
-            {children}
+            <main className="flex-grow">{children}</main>
+            <Footer />
           </ThemeProvider>
         </AmplifySetup>
       </body>

@@ -191,7 +191,6 @@
   
   body {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
   }
   
   /* Prevent iOS zoom on input focus */

@@ -91,16 +91,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Footer - Fixed to bottom */}
-        <div 
-          id="footer" 
-          className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground animate-[fadeInUp_1s_ease-out]"
-          style={{ fontFamily: 'var(--font-ubuntu)' }}
-        >
-          <div id="copyright" className="text-[11px] w-full text-center text-muted-foreground">
-            © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
-          </div>
-        </div>
       </div>
 
       {/* Report Modal */}
