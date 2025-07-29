@@ -78,7 +78,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased min-h-dvh flex flex-col`}>
+      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased min-h-screen flex flex-col`}>
         <AmplifySetup>
           <ThemeProvider>
             <Navigation />
