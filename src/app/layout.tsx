@@ -80,11 +80,13 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
+        className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <ThemeProvider>
           <Navigation />
-          {children}
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>
