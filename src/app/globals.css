@@ -171,8 +171,6 @@
   
   body {
     -webkit-text-size-adjust: none;
-    position: fixed;
-    width: 100%;
   }
   
   #logo {

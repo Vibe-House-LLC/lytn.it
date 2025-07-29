@@ -21,7 +21,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden relative">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
       <div id="gradient" className="h-full w-full">
         <div className="flex flex-col items-center justify-center h-full pb-20">
                       <div id="main" className="text-muted-foreground w-full min-h-[550px] h-full">
