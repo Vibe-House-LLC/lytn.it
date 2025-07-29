@@ -203,8 +203,8 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
 
     return (
         <div className="min-h-screen bg-background relative">
-            <div className="flex flex-col items-center justify-center h-full pb-20">
-                <div className="text-muted-foreground w-full min-h-[550px] h-full">
+            <div className="flex flex-col items-center justify-center pb-20">
+                <div className="text-muted-foreground w-full min-h-[550px]">
                     <div 
                         className="absolute w-full transform -translate-y-1/2"
                         style={{ 

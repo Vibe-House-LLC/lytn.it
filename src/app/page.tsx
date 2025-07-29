@@ -22,9 +22,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <div id="gradient" className="h-full w-full">
-        <div className="flex flex-col items-center justify-center h-full pb-20">
-                      <div id="main" className="text-muted-foreground w-full min-h-[550px] h-full">
+      <div id="gradient" className="w-full">
+        <div className="flex flex-col items-center justify-center pb-20">
+                      <div id="main" className="text-muted-foreground w-full min-h-[550px]">
             {/* Vertical centered content */}
             <div 
               className="absolute w-full transform -translate-y-1/2"
