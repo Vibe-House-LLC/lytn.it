@@ -135,7 +135,6 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setCurrentHost(window.location.host);
-            setCurrentYear(new Date().getFullYear());
             
             // Load autoforward preference from localStorage
             const savedAutoforward = localStorage.getItem('lytn-autoforward-enabled');
