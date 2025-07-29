@@ -265,7 +265,7 @@ export default function ShortenUrl() {
                 <div className="flex justify-center mt-[20px]">
                     <button 
                         type="submit"
-                        className="bg-[#467291] dark:bg-primary rounded-[4px] border border-border text-white dark:text-primary-foreground px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center transition-all duration-200 cursor-pointer w-[175px] h-[55px] hover:bg-background hover:text-[#467291] dark:hover:text-primary hover:border-[#467291] dark:hover:border-primary animate-[fadeInUp_1s_ease-out]"
+                        className="bg-[#467291] dark:bg-primary rounded-[4px] border border-border text-white dark:text-primary-foreground px-[5px] py-0 pl-[15px] text-center no-underline inline-flex items-center justify-center transition-all duration-200 cursor-pointer w-[175px] h-[55px] hover:bg-background hover:text-[#467291] dark:hover:text-white hover:border-[#467291] dark:hover:border-primary hover:shadow-[0_0_15px_rgba(70,114,145,0.4)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] animate-[fadeInUp_1s_ease-out]"
                         style={{ 
                             fontFamily: 'var(--font-roboto-condensed)',
                             letterSpacing: '2pt',
