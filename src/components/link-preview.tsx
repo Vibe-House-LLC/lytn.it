@@ -202,16 +202,11 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-background relative overflow-x-hidden">
-            <div className="flex flex-col items-center justify-center h-full pb-20">
-                <div className="text-muted-foreground w-full min-h-[550px] h-full">
-                    <div 
-                        className="absolute w-full transform -translate-y-1/2"
-                        style={{ 
-                            top: '50%',
-                        }}
-                    >
-                        <div className="max-w-4xl mx-auto px-6">
+        <div className="min-h-dvh bg-background ios-safe-bottom flex flex-col overflow-x-hidden">
+            <div className="flex flex-col items-center justify-center flex-1 pb-20">
+                <div className="text-muted-foreground w-full min-h-[550px]">
+                    <div className="h-[2dvh]" aria-hidden="true" />
+                    <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <h1 
@@ -355,11 +350,12 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                         </div>
                     </div>
                 </div>
-            </div>
-            
+
+            <div className="h-[2dvh]" aria-hidden="true" />
+
             {/* Footer */}
-            <div 
-                className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground"
+            <div
+                className="mt-auto pb-[15px] text-xs w-full text-center text-muted-foreground"
                 style={{ fontFamily: 'var(--font-ubuntu)' }}
             >
                 <div className="text-[11px] w-full text-center text-muted-foreground">
