@@ -18,14 +18,16 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isLytnUrl = (url: string): boolean => {
+  const isValidShortenedUrl = (url: string): boolean => {
     try {
       const parsed = new URL(url);
-      // Allow lytn.it domains and localhost for development
-      return parsed.hostname === 'lytn.it' || 
-             parsed.hostname.endsWith('.lytn.it') ||
-             parsed.hostname === 'localhost' ||
-             parsed.hostname === '127.0.0.1';
+      // Validate that it has a proper protocol, hostname, and path with an ID
+      return (
+        (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+        parsed.hostname.length > 0 &&
+        parsed.pathname.length > 1 && // Must have more than just "/"
+        parsed.pathname !== '/'
+      );
     } catch {
       return false;
     }
@@ -39,8 +41,9 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
       return;
     }
 
-    if (!isLytnUrl(formData.lytnUrl)) {
-      setError('Please enter a valid shortened URL (e.g., https://lytn.it/abc123 or http://localhost:3000/abc123)');
+    if (!isValidShortenedUrl(formData.lytnUrl)) {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://lytn.it';
+      setError(`Please enter a valid shortened URL (e.g., ${currentOrigin}/abc123)`);
       return;
     }
 
@@ -129,7 +132,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
               value={formData.lytnUrl}
               onChange={(e) => setFormData(prev => ({ ...prev, lytnUrl: e.target.value }))}
               className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring bg-input text-foreground"
-              placeholder={typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+              placeholder={typeof window !== 'undefined' 
                 ? `${window.location.origin}/abc123` 
                 : 'https://lytn.it/abc123'}
               required
@@ -189,7 +192,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-destructive text-destructive-foreground py-3 px-4 rounded-md hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
+              className="flex-1 bg-destructive text-white py-3 px-4 rounded-md hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
             >
               {isSubmitting ? 'Reporting...' : 'Report Link'}
             </button>
