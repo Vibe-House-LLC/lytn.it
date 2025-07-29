@@ -22,10 +22,10 @@ export default function Home() {
 
   return (
     <div className="min-h-dvh bg-background ios-safe-bottom overflow-x-hidden flex flex-col relative">
-      <div id="gradient" className="flex flex-col flex-1 h-full w-full">
+      <div id="gradient" className="flex flex-col flex-1 w-full">
         <div className="h-[2dvh]" aria-hidden="true" />
         <div className="flex flex-col items-center justify-center flex-1 pb-20">
-                      <div id="main" className="text-muted-foreground w-full min-h-[550px] h-full">
+                      <div id="main" className="text-muted-foreground w-full min-h-[550px]">
             {/* Vertical centered content */}
             <div 
               className="absolute w-full transform -translate-y-1/2"
