@@ -162,31 +162,6 @@
   }
 }
 
-/* Prevent body scroll on mobile when content fits */
-@media screen and (max-device-width: 480px) {
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
-  body {
-    -webkit-text-size-adjust: none;
-    position: fixed;
-    width: 100%;
-  }
-  
-  #logo {
-    top: 20px;
-  }
-  
-  .vertical-center {
-    top: 34% !important;
-  }
-  
-  #top {
-    height: 229px;
-  }
-}
 
 /* Use dynamic viewport height for better mobile support */
 @supports (height: 100dvh) {
