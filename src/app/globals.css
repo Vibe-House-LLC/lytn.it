@@ -162,29 +162,11 @@
   }
 }
 
-/* Prevent body scroll on mobile when content fits */
+/* Basic mobile adjustments */
 @media screen and (max-device-width: 480px) {
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
+  html,
   body {
-    -webkit-text-size-adjust: none;
-    position: fixed;
-    width: 100%;
-  }
-  
-  #logo {
-    top: 20px;
-  }
-  
-  .vertical-center {
-    top: 34% !important;
-  }
-  
-  #top {
-    height: 229px;
+    overflow-x: hidden;
   }
 }
 

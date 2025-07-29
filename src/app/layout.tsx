@@ -43,8 +43,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-    <AmplifySetup>
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
@@ -79,16 +77,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
-      >
-        <ThemeProvider>
-          <Navigation />
-          {children}
-        </ThemeProvider>
+      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}>
+        <AmplifySetup>
+          <ThemeProvider>
+            <Navigation />
+            {children}
+          </ThemeProvider>
+        </AmplifySetup>
       </body>
     </html>
-    </AmplifySetup>
-    </>
   );
 }
