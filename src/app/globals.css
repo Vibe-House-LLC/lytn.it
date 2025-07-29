@@ -165,7 +165,7 @@
 /* Prevent body scroll on mobile when content fits */
 @media screen and (max-device-width: 480px) {
   html, body {
-    height: 100%;
+    min-height: 100%;
     overflow-x: hidden;
   }
   
@@ -207,7 +207,7 @@
   
   body {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
   }
   
   /* Prevent iOS zoom on input focus */
