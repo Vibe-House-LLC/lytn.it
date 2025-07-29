@@ -38,7 +38,7 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
         <div className="w-full px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo - only show when not on home page */}
@@ -46,7 +46,7 @@ export default function Navigation() {
               <div className="flex-shrink-0">
                 <Link href="/" className="flex items-center">
                   <h1 
-                    className="text-[#467291] hover:text-[#5a8eb2] transition-colors text-2xl font-semibold"
+                    className="text-[#467291] hover:text-[#5a8eb2] dark:text-primary dark:hover:text-primary/80 transition-colors text-2xl font-semibold"
                     style={{ fontFamily: 'var(--font-dosis)' }}
                   >
                     lytn.it
@@ -70,13 +70,13 @@ export default function Navigation() {
           onClick={() => setShowAuthenticator(false)}
         >
         <div 
-          className="bg-white rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto"
+          className="bg-background rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-end items-center mb-0">
             <button
               onClick={() => setShowAuthenticator(false)}
-              className="text-gray-500 hover:text-gray-700 text-l leading-none cursor-pointer"
+              className="text-muted-foreground hover:text-foreground text-l leading-none cursor-pointer"
             >
               ✕
             </button>
@@ -85,16 +85,16 @@ export default function Navigation() {
             {isAuthenticating ? (
               <div className="text-center py-8">
                 <div className="flex justify-center items-center mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#467291]"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-                <p className="text-gray-600">Signing you in...</p>
+                <p className="text-muted-foreground">Signing you in...</p>
               </div>
             ) : (
               <Authenticator>
                 {({ signOut }) => (
                   <div className="text-center">
                     <div className="flex justify-center items-center mb-4">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#467291]"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                     <Button 
                       onClick={() => {
@@ -172,7 +172,7 @@ function AuthSection({ onShowAuth }: { onShowAuth: () => void }) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-0 focus:ring-offset-0 border-0 focus:border-0 active:border-0 hover:bg-transparent">
             <Avatar className="h-8 w-8">
               <AvatarImage src="" alt={email} />
               <AvatarFallback className="bg-[#467291] text-white text-sm">

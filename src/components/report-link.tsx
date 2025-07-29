@@ -18,14 +18,16 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isLytnUrl = (url: string): boolean => {
+  const isValidShortenedUrl = (url: string): boolean => {
     try {
       const parsed = new URL(url);
-      // Allow lytn.it domains and localhost for development
-      return parsed.hostname === 'lytn.it' || 
-             parsed.hostname.endsWith('.lytn.it') ||
-             parsed.hostname === 'localhost' ||
-             parsed.hostname === '127.0.0.1';
+      // Validate that it has a proper protocol, hostname, and path with an ID
+      return (
+        (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+        parsed.hostname.length > 0 &&
+        parsed.pathname.length > 1 && // Must have more than just "/"
+        parsed.pathname !== '/'
+      );
     } catch {
       return false;
     }
@@ -39,8 +41,9 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
       return;
     }
 
-    if (!isLytnUrl(formData.lytnUrl)) {
-      setError('Please enter a valid shortened URL (e.g., https://lytn.it/abc123 or http://localhost:3000/abc123)');
+    if (!isValidShortenedUrl(formData.lytnUrl)) {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://lytn.it';
+      setError(`Please enter a valid shortened URL (e.g., ${currentOrigin}/abc123)`);
       return;
     }
 
@@ -105,13 +108,13 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-background rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Report Link</h2>
+          <h2 className="text-xl font-semibold text-foreground">Report Link</h2>
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
+              className="text-muted-foreground hover:text-foreground text-2xl cursor-pointer"
             >
               ×
             </button>
@@ -120,7 +123,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="lytnUrl" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="lytnUrl" className="block text-sm font-medium text-foreground mb-1">
               Shortened URL to Report *
             </label>
             <input
@@ -128,27 +131,27 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
               id="lytnUrl"
               value={formData.lytnUrl}
               onChange={(e) => setFormData(prev => ({ ...prev, lytnUrl: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring bg-input text-foreground"
+              placeholder={typeof window !== 'undefined' 
                 ? `${window.location.origin}/abc123` 
                 : 'https://lytn.it/abc123'}
               required
               disabled={!!lytnUrl} // Disable if URL is pre-filled
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Enter the shortened URL you want to report
             </p>
           </div>
 
           <div>
-            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="reason" className="block text-sm font-medium text-foreground mb-1">
               Reason for Report
             </label>
             <select
               id="reason"
               value={formData.reason}
               onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring bg-input text-foreground"
             >
               <option value="">Select a reason</option>
               <option value="spam">Spam</option>
@@ -163,7 +166,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
           </div>
 
           <div>
-            <label htmlFor="reporterEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="reporterEmail" className="block text-sm font-medium text-foreground mb-1">
               Your Email (optional)
             </label>
             <input
@@ -171,10 +174,10 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
               id="reporterEmail"
               value={formData.reporterEmail}
               onChange={(e) => setFormData(prev => ({ ...prev, reporterEmail: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-ring bg-input text-foreground"
               placeholder="your.email@example.com"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Providing your email allows us to follow up if needed
             </p>
           </div>
@@ -189,7 +192,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-red-600 text-white py-3 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
+              className="flex-1 bg-destructive text-white py-3 px-4 rounded-md hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
             >
               {isSubmitting ? 'Reporting...' : 'Report Link'}
             </button>
@@ -197,7 +200,7 @@ export default function ReportLink({ lytnUrl, shortId, onClose, onSuccess }: Rep
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 cursor-pointer font-medium"
+                className="flex-1 bg-secondary text-secondary-foreground py-3 px-4 rounded-md hover:bg-secondary/80 cursor-pointer font-medium"
               >
                 Cancel
               </button>

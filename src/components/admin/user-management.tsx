@@ -447,7 +447,7 @@ export default function UserManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+                            <div className="text-2xl font-bold text-[#467291]">{users.length}</div>
             <div className="text-sm text-gray-600">Total Users</div>
           </CardContent>
         </Card>
@@ -590,7 +590,7 @@ export default function UserManagement() {
                       <td className="p-4">
                         <div className="flex gap-1">
                           {user.groups?.map((group) => (
-                            <span key={group} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                            <span key={group} className="px-2 py-1 bg-[#467291]/10 text-[#467291] rounded text-xs">
                               {group}
                             </span>
                           ))}
