@@ -51,7 +51,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
     let destinationUrl = '';
     try {
         console.log('Looking up shortened URL with ID:', shortId);
-        const shortenedUrlRecord = await client.models.ShortenedUrl.get({ id: shortId }, { authMode: loggedIn });
+        const shortenedUrlRecord = await client.models.ShortenedUrl.get({ id: shortId }, { authMode: loggedIn, selectionSet: ['id', 'destination'] });
         console.log('Shortened URL lookup result:', JSON.stringify(shortenedUrlRecord, null, 2));
         
         if (!shortenedUrlRecord.data) {
