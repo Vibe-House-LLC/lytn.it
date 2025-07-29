@@ -93,7 +93,9 @@ const schema = a.schema({
 
   vainId: a
     .query()
-    .arguments({})
+    .arguments({
+      warmup: a.boolean()
+    })
     .returns(a.ref('vainIdReturn'))
     .handler(a.handler.function(vainId))
     .authorization((allow) => [allow.guest(), allow.authenticated()]),

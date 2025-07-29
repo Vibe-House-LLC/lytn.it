@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ShortenUrl from '@/components/shorten-url';
 import ReportLink from '@/components/report-link';
+import { useEffect } from 'react';
 
 export default function Home() {
   const [showReportModal, setShowReportModal] = useState(false);
@@ -15,11 +16,15 @@ export default function Home() {
     setTimeout(() => setReportSuccess(false), 5000);
   };
 
+  useEffect(() => {
+    fetch('/api/v2/utility/warm-up');
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white overflow-hidden relative">
+    <div className="min-h-screen bg-background overflow-hidden relative">
       <div id="gradient" className="h-full w-full">
         <div className="flex flex-col items-center justify-center h-full pb-20">
-          <div id="main" className="text-[#6e6e6e] w-full min-h-[550px] h-full">
+                      <div id="main" className="text-muted-foreground w-full min-h-[550px] h-full">
             {/* Vertical centered content */}
             <div 
               className="absolute w-full transform -translate-y-1/2"
@@ -39,7 +44,7 @@ export default function Home() {
                     }}
                   >
                     <h1 
-                      className="absolute w-full bottom-0 m-0 text-[#467291] text-center leading-none"
+                      className="absolute w-full bottom-0 m-0 text-[#467291] dark:text-primary text-center leading-none"
                       style={{ 
                         fontFamily: 'var(--font-dosis)', 
                         fontSize: 'min(115px, 80vw)',
@@ -89,11 +94,11 @@ export default function Home() {
         {/* Footer - Fixed to bottom */}
         <div 
           id="footer" 
-          className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-[#d4d4d4] animate-[fadeInUp_1s_ease-out]"
+          className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground animate-[fadeInUp_1s_ease-out]"
           style={{ fontFamily: 'var(--font-ubuntu)' }}
         >
-          <div id="copyright" className="text-[11px] w-full text-center text-[#d4d4d4]">
-            © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-[#d4d4d4] hover:text-black cursor-pointer">Vibe House LLC</a>
+          <div id="copyright" className="text-[11px] w-full text-center text-muted-foreground">
+            © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
           </div>
         </div>
       </div>

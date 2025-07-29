@@ -484,11 +484,11 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string | null | undefined): string => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed': return 'bg-blue-100 text-blue-800';
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'dismissed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'reviewed': return 'bg-[#467291]/10 text-[#467291] dark:bg-[#467291]/30 dark:text-[#5a8eb2]';
+      case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'dismissed': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -521,7 +521,7 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-          <p className="text-gray-600">Please sign in to access the admin dashboard.</p>
+          <p className="text-muted-foreground">Please sign in to access the admin dashboard.</p>
         </div>
       </div>
     );
@@ -531,19 +531,19 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage reported links and review user reports</p>
+        <p className="text-muted-foreground">Manage reported links and review user reports</p>
       </div>
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="border-b border-gray-200">
+                  <div className="border-b border-border">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('reports')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'reports'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-[#467291] text-[#467291]'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               Reported Links
@@ -552,8 +552,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('users')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-[#467291] text-[#467291]'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               User Management
@@ -562,8 +562,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('import')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'import'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-[#467291] text-[#467291]'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               Import Links
@@ -580,37 +580,37 @@ export default function AdminDashboard() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">{statistics.pending}</div>
-            <div className="text-sm text-gray-600">Pending Review</div>
+            <div className="text-sm text-muted-foreground">Pending Review</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{statistics.reviewed}</div>
-            <div className="text-sm text-gray-600">Reviewed</div>
+            <div className="text-2xl font-bold text-[#467291]">{statistics.reviewed}</div>
+            <div className="text-sm text-muted-foreground">Reviewed</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">{statistics.resolved}</div>
-            <div className="text-sm text-gray-600">Resolved</div>
+            <div className="text-sm text-muted-foreground">Resolved</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-gray-600">{statistics.dismissed}</div>
-            <div className="text-sm text-gray-600">Dismissed</div>
+            <div className="text-sm text-muted-foreground">Dismissed</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-purple-600">{statistics.todayCount}</div>
-            <div className="text-sm text-gray-600">Today</div>
+            <div className="text-sm text-muted-foreground">Today</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-indigo-600">{statistics.total}</div>
-            <div className="text-sm text-gray-600">Total</div>
+            <div className="text-sm text-muted-foreground">Total</div>
           </CardContent>
         </Card>
       </div>
@@ -720,7 +720,7 @@ export default function AdminDashboard() {
             <Button onClick={resetFilters} variant="outline" size="sm">
               Reset Filters
             </Button>
-            <div className="text-sm text-gray-600 flex items-center ml-auto">
+            <div className="text-sm text-muted-foreground flex items-center ml-auto">
               Showing {paginatedLinks.length} of {filteredAndSortedLinks.length} results
             </div>
           </div>
@@ -735,25 +735,25 @@ export default function AdminDashboard() {
         <CardContent>
           {logsLoading ? (
             <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading admin logs...</p>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-sm text-muted-foreground">Loading admin logs...</p>
             </div>
           ) : adminLogs.length === 0 ? (
-            <p className="text-gray-600 text-center py-4">No admin actions recorded yet.</p>
+            <p className="text-muted-foreground text-center py-4">No admin actions recorded yet.</p>
           ) : (
             <div className="space-y-3">
               {adminLogs.slice(0, 5).map((log) => (
-                <div key={log.id} className="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r">
+                <div key={log.id} className="border-l-4 border-[#467291] bg-[#467291]/10 p-3 rounded-r">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="font-medium text-sm">
                         {log.actionType?.replace('_', ' ').toUpperCase()} by {log.adminEmail}
                       </div>
-                      <div className="text-xs text-gray-600 mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         {formatDate(log.createdAt)} • Report ID: {log.reportedLinkId?.substring(0, 8)}...
                       </div>
                       {log.notes && (
-                        <div className="text-sm text-gray-700 mt-2 bg-white p-2 rounded">
+                        <div className="text-sm text-foreground mt-2 bg-background p-2 rounded border border-border">
                           {log.notes}
                         </div>
                       )}
@@ -762,7 +762,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
               {adminLogs.length > 5 && (
-                <div className="text-center text-sm text-gray-500 pt-2">
+                <div className="text-center text-sm text-muted-foreground pt-2">
                   +{adminLogs.length - 5} more actions
                 </div>
               )}
@@ -791,22 +791,22 @@ export default function AdminDashboard() {
         <CardContent className="p-0">
           {loading && allReportedLinks.length === 0 ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading reported links...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading reported links...</p>
           </div>
           ) : filteredAndSortedLinks.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">No reported links found with current filters.</p>
+              <p className="text-muted-foreground">No reported links found with current filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-muted border-b border-border">
                   <tr>
                     <th className="text-left p-4 font-medium">
                       <button
                         onClick={() => handleSort('createdAt')}
-                        className="flex items-center gap-1 hover:text-blue-600"
+                        className="flex items-center gap-1 hover:text-[#467291]"
                       >
                         Created
                         {sortBy === 'createdAt' && (
@@ -821,7 +821,7 @@ export default function AdminDashboard() {
                     <th className="text-left p-4 font-medium">
                       <button
                         onClick={() => handleSort('status')}
-                        className="flex items-center gap-1 hover:text-blue-600"
+                        className="flex items-center gap-1 hover:text-[#467291]"
                       >
                         Status
                         {sortBy === 'status' && (
@@ -834,8 +834,8 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y">
                   {paginatedLinks.map((link) => (
-                    <tr key={link.id} className={`hover:bg-gray-50 ${isLinkDeleted(link) ? 'bg-red-50' : ''}`}>
-                      <td className="p-4 text-sm text-gray-600">
+                    <tr key={link.id} className={`hover:bg-muted/50 ${isLinkDeleted(link) ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+                      <td className="p-4 text-sm text-muted-foreground">
                         {formatDate(link.createdAt)}
                       </td>
                       <td className="p-4">
@@ -847,7 +847,7 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500">{link.lytnUrl || 'N/A'}</div>
+                        <div className="text-xs text-muted-foreground">{link.lytnUrl || 'N/A'}</div>
                       </td>
                       <td className="p-4">
                         <div className="text-sm max-w-xs truncate" title={link.destinationUrl || 'N/A'}>
@@ -859,7 +859,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4">
                         <div className="text-sm">{link.reporterEmail || 'N/A'}</div>
-                        <div className="text-xs text-gray-500">{link.reporterIp || 'N/A'}</div>
+                        <div className="text-xs text-muted-foreground">{link.reporterIp || 'N/A'}</div>
                       </td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(link.status)}`}>
@@ -934,7 +934,7 @@ export default function AdminDashboard() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Page {currentPage} of {totalPages}
           </div>
           <div className="flex gap-2">
@@ -961,7 +961,7 @@ export default function AdminDashboard() {
       {/* Action Modal */}
       {actionModal.isOpen && actionModal.report && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
+          <div className="bg-background rounded-lg max-w-md w-full border border-border shadow-lg">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {actionModal.actionType === 'status_change' && `Change Status to ${getStatusDisplayName(actionModal.newStatus)}`}
@@ -971,10 +971,10 @@ export default function AdminDashboard() {
               </h3>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-muted-foreground mb-2">
                   <strong>Link:</strong> {actionModal.report.shortId || 'N/A'}
                 </p>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   <strong>Destination:</strong> {actionModal.report.destinationUrl || 'N/A'}
                 </p>
                 
@@ -982,7 +982,7 @@ export default function AdminDashboard() {
                   {actionModal.actionType === 'add_note' ? 'Note' : 'Reason/Notes'} {actionModal.actionType === 'add_note' ? '(Required)' : '(Optional)'}
                 </label>
                 <textarea
-                  className="w-full p-3 border border-gray-300 rounded-md resize-none"
+                  className="w-full p-3 border border-border rounded-md resize-none bg-input text-foreground"
                   rows={3}
                   placeholder={
                     actionModal.actionType === 'add_note' 
@@ -1016,13 +1016,13 @@ export default function AdminDashboard() {
       {/* Detail Modal */}
       {showDetailModal && selectedReport && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-border shadow-lg">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-2xl font-bold">Report Details</h2>
                 <button
                   onClick={closeDetailModal}
-                  className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                  className="text-muted-foreground hover:text-foreground text-xl font-bold"
                 >
                   ×
                 </button>
@@ -1030,7 +1030,7 @@ export default function AdminDashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h3 className="font-semibold mb-2 text-gray-700">Link Information</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">Link Information</h3>
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Short ID:</span>
@@ -1058,7 +1058,7 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div>
-                  <h3 className="font-semibold mb-2 text-gray-700">Report Information</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">Report Information</h3>
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Reason:</span>
@@ -1082,7 +1082,7 @@ export default function AdminDashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h3 className="font-semibold mb-2 text-gray-700">Status & Dates</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">Status & Dates</h3>
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Status:</span>
@@ -1102,7 +1102,7 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div>
-                  <h3 className="font-semibold mb-2 text-gray-700">Admin Actions</h3>
+                  <h3 className="font-semibold mb-2 text-foreground">Admin Actions</h3>
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Last Action:</span>
@@ -1118,15 +1118,15 @@ export default function AdminDashboard() {
               
               {selectedReport.adminNotes && (
                 <div className="mb-6">
-                  <h3 className="font-semibold mb-2 text-gray-700">Admin Notes</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2 text-foreground">Admin Notes</h3>
+                  <div className="bg-muted p-4 rounded-lg">
                     <pre className="text-sm whitespace-pre-wrap">{selectedReport.adminNotes}</pre>
                   </div>
                 </div>
               )}
               
               <div className="flex justify-between items-center pt-4 border-t">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   Report ID: {selectedReport.id}
                 </div>
                 <div className="flex gap-2">

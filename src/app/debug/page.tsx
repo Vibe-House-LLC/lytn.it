@@ -42,7 +42,7 @@ export default async function DebugPage() {
           <h1 className="text-2xl font-bold mb-4">Debug: API Route Testing</h1>
           
           <div className="space-y-4">
-            <div className="p-4 border rounded bg-blue-50">
+            <div className="p-4 border rounded bg-[#467291]/10">
               <h3 className="font-bold">Create Test (Next.js created record):</h3>
               <pre>{JSON.stringify(createResult, null, 2)}</pre>
             </div>

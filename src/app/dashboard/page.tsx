@@ -33,14 +33,14 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-          <p className="text-gray-600">Please sign in to access your dashboard.</p>
+          <p className="text-muted-foreground">Please sign in to access your dashboard.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 ios-safe-bottom">
+    <div className="min-h-dvh bg-background ios-safe-bottom">
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Dashboard Toggle */}
         {isAdmin && (
@@ -67,7 +67,7 @@ export default function DashboardPage() {
                     Admin Dashboard
                   </Button>
                 </div>
-                <div className="mt-2 text-sm text-gray-600">
+                <div className="mt-2 text-sm text-muted-foreground">
                   {isAdminView 
                     ? "Viewing admin dashboard - manage all reported links and user reports"
                     : "Viewing user dashboard - see your own links and reports"

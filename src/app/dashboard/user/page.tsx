@@ -262,14 +262,14 @@ export default function UserDashboard() {
 
   const getStatusColor = (status: string | null | undefined): string => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'reported': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed': return 'bg-blue-100 text-blue-800';
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'dismissed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'inactive': return 'bg-muted text-muted-foreground';
+      case 'reported': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'reviewed': return 'bg-[#467291]/10 text-[#467291] dark:bg-[#467291]/30 dark:text-[#5a8eb2]';
+      case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'dismissed': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -292,7 +292,7 @@ export default function UserDashboard() {
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-bold mb-4">User Dashboard</h1>
-          <p className="text-gray-600">Please sign in to view your dashboard.</p>
+          <p className="text-muted-foreground">Please sign in to view your dashboard.</p>
         </div>
       </div>
     );
@@ -302,8 +302,8 @@ export default function UserDashboard() {
     return (
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading your data...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading your data...</p>
         </div>
       </div>
     );
@@ -320,7 +320,7 @@ export default function UserDashboard() {
       <div className="space-y-6">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">My Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Welcome back, {user.signInDetails?.loginId || user.username}!
           </p>
         </div>
@@ -359,8 +359,8 @@ export default function UserDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card>
             <CardContent className="p-3 sm:p-4">
-              <div className="text-xl sm:text-2xl font-bold text-blue-600">{links.length}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Total Links</div>
+              <div className="text-xl sm:text-2xl font-bold text-[#467291]">{links.length}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Total Links</div>
             </CardContent>
           </Card>
           <Card>
@@ -368,7 +368,7 @@ export default function UserDashboard() {
               <div className="text-xl sm:text-2xl font-bold text-green-600">
                 {links.filter(l => l.status === 'active').length}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Active Links</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Active Links</div>
             </CardContent>
           </Card>
           <Card>
@@ -376,7 +376,7 @@ export default function UserDashboard() {
               <div className="text-xl sm:text-2xl font-bold text-red-600">
                 {links.filter(l => l.status === 'reported').length}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Reported Links</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Reported Links</div>
             </CardContent>
           </Card>
           <Card>
@@ -384,21 +384,21 @@ export default function UserDashboard() {
               <div className="text-xl sm:text-2xl font-bold text-gray-600">
                 {links.filter(l => l.deletedAt).length}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Deleted Links</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Deleted Links</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-border">
             <nav className="-mb-px flex">
               <button
                 onClick={() => setActiveTab('links')}
                 className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none touch-manipulation ${
                   activeTab === 'links'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#467291] text-[#467291]'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
                 style={{ 
                   WebkitTouchCallout: 'none',
@@ -411,8 +411,8 @@ export default function UserDashboard() {
                 onClick={() => setActiveTab('reports')}
                 className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-sm sm:text-base flex-1 sm:flex-none touch-manipulation ${
                   activeTab === 'reports'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#467291] text-[#467291]'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
                 style={{ 
                   WebkitTouchCallout: 'none',
@@ -441,7 +441,7 @@ export default function UserDashboard() {
             {filteredLinks.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     {searchTerm ? 'No links found matching your search.' : "You haven't created any links yet."}
                   </p>
                 </CardContent>
@@ -453,7 +453,7 @@ export default function UserDashboard() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-base sm:text-lg break-all">
-                          <span className="text-blue-600">lytn.it/</span>{link.id}
+                          <span className="text-[#467291]">lytn.it/</span>{link.id}
                           {link.deletedAt && (
                             <span className="ml-2 text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
                               DELETED
@@ -491,17 +491,17 @@ export default function UserDashboard() {
                   <CardContent className="space-y-3 pt-0">
                     <div>
                       <span className="font-medium text-sm">Destination:</span>
-                      <div className="text-sm text-gray-600 break-all mt-1">{link.destination}</div>
+                      <div className="text-sm text-muted-foreground break-all mt-1">{link.destination}</div>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="font-medium">Created:</span>
-                        <div className="text-gray-600 text-xs sm:text-sm">{formatDate(link.createdAt)}</div>
+                        <div className="text-muted-foreground text-xs sm:text-sm">{formatDate(link.createdAt)}</div>
                       </div>
                       <div>
                         <span className="font-medium">Reports:</span>
-                        <span className="ml-2 text-gray-600">{link.reports?.length || 0}</span>
+                        <span className="ml-2 text-muted-foreground">{link.reports?.length || 0}</span>
                       </div>
                     </div>
 
@@ -540,7 +540,7 @@ export default function UserDashboard() {
             {filteredReports.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     {searchTerm ? 'No reports found matching your search.' : "No reports found for your links."}
                   </p>
                 </CardContent>
@@ -561,24 +561,24 @@ export default function UserDashboard() {
                   <CardContent className="space-y-3">
                     <div>
                       <span className="font-medium text-sm">Destination:</span>
-                      <div className="text-sm text-gray-600 break-all mt-1">{report.destinationUrl}</div>
+                      <div className="text-sm text-muted-foreground break-all mt-1">{report.destinationUrl}</div>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="font-medium">Reason:</span>
-                        <div className="text-gray-600 text-xs sm:text-sm">{formatReason(report.reason)}</div>
+                        <div className="text-muted-foreground text-xs sm:text-sm">{formatReason(report.reason)}</div>
                       </div>
                       <div>
                         <span className="font-medium">Reported:</span>
-                        <div className="text-gray-600 text-xs sm:text-sm">{formatDate(report.createdAt)}</div>
+                        <div className="text-muted-foreground text-xs sm:text-sm">{formatDate(report.createdAt)}</div>
                       </div>
                     </div>
 
                     {report.adminNotes && (
-                      <div className="text-sm bg-blue-50 p-3 rounded">
-                        <div className="font-medium text-blue-800 mb-2">Admin Notes:</div>
-                        <div className="text-blue-700 whitespace-pre-wrap text-xs sm:text-sm">{report.adminNotes}</div>
+                      <div className="text-sm bg-[#467291]/10 p-3 rounded">
+                        <div className="font-medium text-[#467291] mb-2">Admin Notes:</div>
+                        <div className="text-[#467291]/80 whitespace-pre-wrap text-xs sm:text-sm">{report.adminNotes}</div>
                       </div>
                     )}
                   </CardContent>
