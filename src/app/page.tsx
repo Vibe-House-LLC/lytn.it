@@ -21,8 +21,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden relative">
-      <div id="gradient" className="h-full w-full">
+    <div className="min-h-screen flex flex-col bg-background">
+      <div id="gradient" className="flex-grow w-full relative">
         <div className="flex flex-col items-center justify-center h-full pb-20">
                       <div id="main" className="text-muted-foreground w-full min-h-[550px] h-full">
             {/* Vertical centered content */}
@@ -91,16 +91,16 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Footer - Fixed to bottom */}
-        <div 
-          id="footer" 
-          className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground animate-[fadeInUp_1s_ease-out]"
+        {/* Footer */}
+        <footer
+          id="footer"
+          className="pb-[15px] text-xs w-full text-center text-muted-foreground mt-auto animate-[fadeInUp_1s_ease-out]"
           style={{ fontFamily: 'var(--font-ubuntu)' }}
         >
           <div id="copyright" className="text-[11px] w-full text-center text-muted-foreground">
             © {new Date().getFullYear()} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
           </div>
-        </div>
+        </footer>
       </div>
 
       {/* Report Modal */}

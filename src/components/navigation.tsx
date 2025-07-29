@@ -38,7 +38,7 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
+      <nav className="w-full bg-background/80 backdrop-blur-sm">
         <div className="w-full px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo - only show when not on home page */}

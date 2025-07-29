@@ -202,8 +202,8 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-background overflow-hidden relative">
-            <div className="flex flex-col items-center justify-center h-full pb-20">
+        <div className="min-h-screen flex flex-col bg-background">
+            <div className="flex flex-col items-center justify-center flex-grow pb-20">
                 <div className="text-muted-foreground w-full min-h-[550px] h-full">
                     <div 
                         className="absolute w-full transform -translate-y-1/2"
@@ -358,14 +358,14 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
             </div>
             
             {/* Footer */}
-            <div 
-                className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground"
+            <footer
+                className="pb-[15px] text-xs w-full text-center text-muted-foreground mt-auto"
                 style={{ fontFamily: 'var(--font-ubuntu)' }}
             >
                 <div className="text-[11px] w-full text-center text-muted-foreground">
                     © {currentYear} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
                 </div>
-            </div>
+            </footer>
 
             {/* Report Modal */}
             {showReportModal && (
