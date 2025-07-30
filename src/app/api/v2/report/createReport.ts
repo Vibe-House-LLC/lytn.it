@@ -24,6 +24,12 @@ function isValidEmail(email: string): boolean {
 export default async function createReport({ url, shortId, reason, reporterEmail, clientIp }: CreateReportParams) {
     console.log('Creating report for:', { url, shortId, reason, reporterEmail });
 
+    let ip = clientIp;
+
+    if (ip && ip.includes(',')) {
+        ip = ip.split(',')[0];
+    }
+
     let loggedIn: 'identityPool' | 'userPool' = 'identityPool';
     try {
         const userDetails = await runWithAmplifyServerContext({
@@ -74,7 +80,7 @@ export default async function createReport({ url, shortId, reason, reporterEmail
                 destinationUrl: destinationUrl,
                 reason: reason,
                 reporterEmail: validEmail,
-                reporterIp: clientIp,
+                reporterIp: ip,
                 source: 'user_reported' as const,
                 status: 'pending' as const,
                 createdAt: new Date().toISOString(),
