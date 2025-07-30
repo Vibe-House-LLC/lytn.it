@@ -21,10 +21,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="bg-background">
+    <div className="bg-background flex-grow flex items-center justify-center">
       <div id="gradient" className="w-full">
-        <div className="flex flex-col items-center pb-20">
-          <div id="main" className="text-muted-foreground w-full min-h-[550px] pt-24">
+        <div className="flex flex-col items-center justify-center">
+          <div id="main" className="text-muted-foreground w-full">
             <div id="top" className="w-full">
               <div id="content" className="mt-[15px] relative max-w-[1200px] w-full mx-auto">
                 {/* Logo */}
@@ -32,11 +32,11 @@ export default function Home() {
                   id="logo"
                   className="relative mb-0 mx-auto bg-no-repeat bg-center bg-bottom animate-[fadeInDown_1s_ease-out] w-full max-w-[371px]"
                   style={{
-                      height: '207px'
+                      // height: '207px'
                     }}
                   >
                     <h1 
-                      className="absolute w-full bottom-0 m-0 text-[#467291] dark:text-primary text-center leading-none"
+                      className=" w-full m-0 text-[#467291] dark:text-primary text-center leading-none pb-5"
                       style={{ 
                         fontFamily: 'var(--font-dosis)', 
                         fontSize: 'min(115px, 80vw)',
