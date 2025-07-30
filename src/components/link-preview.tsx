@@ -200,16 +200,9 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-background relative">
-            <div className="flex flex-col items-center justify-center pb-20">
-                <div className="text-muted-foreground w-full min-h-[550px]">
-                    <div 
-                        className="absolute w-full transform -translate-y-1/2"
-                        style={{ 
-                            top: '50%',
-                        }}
-                    >
-                        <div className="max-w-4xl mx-auto px-6">
+        <div className="bg-background flex-grow flex items-center justify-center">
+            <div className="w-full">
+                <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <h1 
@@ -352,8 +345,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             
                         </div>
                     </div>
-                </div>
-            </div>
+                
             
 
             {/* Report Modal */}
