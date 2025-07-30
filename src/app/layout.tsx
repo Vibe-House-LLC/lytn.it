@@ -43,52 +43,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-    <AmplifySetup>
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  const systemQuery = window.matchMedia('(prefers-color-scheme: dark)');
-                  const systemPrefersDark = systemQuery.matches;
-                  const storedTheme = localStorage.getItem('lytn-theme');
-                  
-                  let shouldBeDark = false;
-                  
-                  if (!storedTheme || storedTheme === 'system') {
-                    shouldBeDark = systemPrefersDark;
-                  } else {
-                    shouldBeDark = storedTheme === 'dark';
-                  }
-                  
-                  if (shouldBeDark) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                  
-                } catch (e) {
-                  console.error('Theme detection error:', e);
-                }
-              })();
-            `,
-          }}
-        />
       </head>
       <body
         className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
       >
-        <ThemeProvider>
-          <Navigation />
-          {children}
-        </ThemeProvider>
+        <AmplifySetup>
+          <ThemeProvider>
+            <Navigation />
+            {children}
+          </ThemeProvider>
+        </AmplifySetup>
       </body>
     </html>
-    </AmplifySetup>
-    </>
   );
 }

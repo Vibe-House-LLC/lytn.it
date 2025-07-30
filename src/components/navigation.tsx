@@ -70,7 +70,7 @@ export default function Navigation() {
           onClick={() => setShowAuthenticator(false)}
         >
         <div 
-          className="bg-background rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto border-0"
+          className="bg-background rounded-lg px-4 pt-0 pb-2 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto border-0"
           onClick={(e) => e.stopPropagation()}
           style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
         >
@@ -154,6 +154,31 @@ export default function Navigation() {
           background: transparent !important;
           box-shadow: none !important;
           border: none !important;
+        }
+
+        /* Reduce bottom spacing on authenticator */
+        [data-amplify-authenticator] {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Remove extra padding from authenticator container */
+        [data-amplify-authenticator] > div {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Specifically target the main authenticator form container */
+        [data-amplify-authenticator] .amplify-authenticator {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Remove bottom spacing from the router/form wrapper */
+        [data-amplify-authenticator] [data-amplify-router],
+        [data-amplify-authenticator] form {
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
         }
         
         /* Ensure all Amplify containers have transparent backgrounds */
@@ -322,7 +347,7 @@ function AuthSection({ onShowAuth }: { onShowAuth: () => void }) {
   }
   
   return (
-    <Button onClick={onShowAuth} variant="default" size="sm" className="bg-[#467291] hover:bg-[#3a5e7a] text-white">
+    <Button onClick={onShowAuth} variant="default" size="sm" className="bg-[#467291] hover:bg-[#3a5e7a] dark:bg-primary dark:hover:bg-primary/90 text-white">
       Sign In
     </Button>
   );

@@ -1,10 +1,34 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
+import { ThemeProvider as AmplifyThemeProvider, defaultDarkModeOverride, ColorMode } from "@aws-amplify/ui-react"
 
 interface ThemeProviderProps {
   children: React.ReactNode
+}
+
+// Inner component that uses the theme from next-themes
+function AmplifyThemeProviderWrapper({ children }: { children: React.ReactNode }) {
+  const { resolvedTheme } = useTheme()
+  
+  const colorMode = React.useMemo((): ColorMode => {
+    if (resolvedTheme === 'dark') return 'dark'
+    if (resolvedTheme === 'light') return 'light'
+    return 'system'
+  }, [resolvedTheme])
+
+  return (
+    <AmplifyThemeProvider
+      theme={{
+        name: 'lytn-theme',
+        overrides: [defaultDarkModeOverride],
+      }}
+      colorMode={colorMode}
+    >
+      {children}
+    </AmplifyThemeProvider>
+  )
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
@@ -12,26 +36,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   React.useEffect(() => {
     setMounted(true)
-    
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if we're using system theme
-      const currentTheme = localStorage.getItem('lytn-theme')
-      if (!currentTheme || currentTheme === 'system') {
-        if (e.matches) {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
-      }
-    }
-    
-    mediaQuery.addEventListener('change', handleChange)
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange)
-    }
   }, [])
 
   if (!mounted) {
@@ -43,11 +47,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       attribute="class"
       defaultTheme="system"
       enableSystem={true}
-      disableTransitionOnChange={false}
+      disableTransitionOnChange
       storageKey="lytn-theme"
-      themes={["light", "dark", "system"]}
     >
-      {children}
+      <AmplifyThemeProviderWrapper>
+        {children}
+      </AmplifyThemeProviderWrapper>
     </NextThemesProvider>
   )
 } 
