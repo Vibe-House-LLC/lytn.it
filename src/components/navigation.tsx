@@ -70,8 +70,9 @@ export default function Navigation() {
           onClick={() => setShowAuthenticator(false)}
         >
         <div 
-          className="bg-background rounded-lg p-4 pt-0 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto"
+          className="bg-background rounded-lg px-4 pt-0 pb-2 max-w-lg w-full mx-0 max-h-[90vh] overflow-y-auto border-0"
           onClick={(e) => e.stopPropagation()}
+          style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
         >
           <div className="flex justify-end items-center mb-0">
             <button
@@ -115,41 +116,173 @@ export default function Navigation() {
       )}
 
       <style jsx global>{`
-        .amplify-authenticator-container .amplify-authenticator {
-          --amplify-components-authenticator-max-width: 100%;
-          margin: 0 auto;
+        /* Use Amplify's documented CSS variables approach */
+        [data-amplify-authenticator] {
+          --amplify-components-authenticator-router-box-shadow: none;
+          --amplify-components-authenticator-router-border-width: 0;
+          --amplify-components-button-primary-background-color: #467291;
+          --amplify-components-button-primary-color: white;
+          --amplify-components-button-link-color: var(--muted-foreground);
+          --amplify-components-fieldcontrol-border-color: #89949f;
+          --amplify-components-textfield-border-color: #89949f;
+          --amplify-components-fieldcontrol-focus-border-color: #467291;
+          --amplify-components-tabs-item-color: rgba(0, 0, 0, 0.7);
+          --amplify-components-tabs-item-active-color: #467291;
+          --amplify-components-tabs-item-active-border-color: #467291;
+          --amplify-components-text-color: white;
+          --amplify-components-fieldcontrol-color: white;
         }
         
-        .amplify-authenticator-container .amplify-card {
+        /* Dark mode - use theme primary color for all blues */
+        .dark [data-amplify-authenticator] {
+          --amplify-components-fieldcontrol-border-color: oklch(0.6 0.02 220);
+          --amplify-components-textfield-border-color: #89949f;
+          --amplify-components-button-primary-background-color: oklch(0.7 0.15 220);
+          --amplify-components-fieldcontrol-focus-border-color: oklch(0.7 0.15 220);
+          --amplify-components-tabs-item-color: white;
+          --amplify-components-tabs-item-active-color: oklch(0.7 0.15 220);
+          --amplify-components-tabs-item-active-border-color: oklch(0.7 0.15 220);
+        }
+        
+        /* Hide default heading */
+        [data-amplify-authenticator] .amplify-heading {
+          display: none;
+        }
+        
+        /* Make card background transparent */
+        [data-amplify-authenticator] .amplify-card {
+          background: transparent !important;
           box-shadow: none !important;
           border: none !important;
-          background: transparent !important;
+        }
+
+        /* Reduce bottom spacing on authenticator */
+        [data-amplify-authenticator] {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Remove extra padding from authenticator container */
+        [data-amplify-authenticator] > div {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Specifically target the main authenticator form container */
+        [data-amplify-authenticator] .amplify-authenticator {
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+
+        /* Remove bottom spacing from the router/form wrapper */
+        [data-amplify-authenticator] [data-amplify-router],
+        [data-amplify-authenticator] form {
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
         }
         
-        .amplify-authenticator-container .amplify-heading {
-          display: none !important;
+        /* Ensure all Amplify containers have transparent backgrounds */
+        [data-amplify-authenticator] [class*="amplify-"],
+        [data-amplify-authenticator] div:not([class*="input"]):not(input),
+        [data-amplify-authenticator] form,
+        [data-amplify-authenticator] fieldset,
+        [data-amplify-authenticator] section {
+          background-color: transparent !important;
         }
         
-        .amplify-authenticator-container .amplify-button {
-          font-size: 1rem !important;
-          padding: 0.75rem 1rem !important;
+        /* Make all text lytn.it blue */
+        [data-amplify-authenticator] label,
+        [data-amplify-authenticator] span,
+        [data-amplify-authenticator] p,
+        [data-amplify-authenticator] .amplify-text,
+        [data-amplify-authenticator] .amplify-label {
+          color: #467291 !important;
         }
         
-        .amplify-authenticator-container .amplify-input {
-          font-size: 1rem !important;
-          padding: 0.75rem !important;
+        /* Force primary buttons to have lytn.it blue background */
+        [data-amplify-authenticator] button[type="submit"],
+        [data-amplify-authenticator] .amplify-button[type="submit"],
+        [data-amplify-authenticator] button[data-amplify-button-variation="primary"],
+        [data-amplify-authenticator] .amplify-button[data-amplify-button-variation="primary"] {
+          background-color: #467291 !important;
+          color: white !important;
+          border: none !important;
         }
         
-        .amplify-authenticator-container .amplify-label {
-          font-size: 0.875rem !important;
+        /* Dark mode buttons use theme primary color */
+        .dark [data-amplify-authenticator] button[type="submit"],
+        .dark [data-amplify-authenticator] .amplify-button[type="submit"],
+        .dark [data-amplify-authenticator] button[data-amplify-button-variation="primary"],
+        .dark [data-amplify-authenticator] .amplify-button[data-amplify-button-variation="primary"] {
+          background-color: oklch(0.7 0.15 220) !important;
+          color: white !important;
         }
         
-        .amplify-authenticator-container .amplify-text {
-          font-size: 1rem !important;
+        /* Tab text - different colors for light and dark mode */
+        /* Dark mode tabs - more specific to override other styles */
+        .dark [data-amplify-authenticator] .amplify-tabs-item:not([aria-selected="true"]),
+        .dark [data-amplify-authenticator] [role="tab"]:not([aria-selected="true"]),
+        .dark [data-amplify-authenticator] button[role="tab"]:not([aria-selected="true"]) {
+          color: white !important;
         }
         
-        .amplify-authenticator-container .amplify-tabs-item {
-          font-size: 1rem !important;
+        /* Light mode tabs */
+        :root [data-amplify-authenticator] .amplify-tabs-item,
+        :root [data-amplify-authenticator] [role="tab"],
+        :root [data-amplify-authenticator] button[role="tab"] {
+          color: rgba(0, 0, 0, 0.7) !important;
+        }
+        
+        /* Active tab - light mode */
+        [data-amplify-authenticator] .amplify-tabs-item[aria-selected="true"],
+        [data-amplify-authenticator] [role="tab"][aria-selected="true"] {
+          color: #467291 !important;
+        }
+        
+        /* Active tab - dark mode uses theme primary */
+        .dark [data-amplify-authenticator] .amplify-tabs-item[aria-selected="true"],
+        .dark [data-amplify-authenticator] [role="tab"][aria-selected="true"] {
+          color: oklch(0.7 0.15 220) !important;
+        }
+        
+        /* Password show/hide button - light mode pure white background, black icon */
+        [data-amplify-authenticator] .amplify-field__show-password,
+        [data-amplify-authenticator] button.amplify-field__show-password {
+          border-color: var(--amplify-components-fieldcontrol-border-color) !important;
+          background-color: white !important;
+          color: black !important;
+          margin-left: 5px !important;
+          border-radius: 6px !important;
+        }
+        
+        /* Light mode specific override */
+        :root [data-amplify-authenticator] .amplify-field__show-password,
+        :root [data-amplify-authenticator] button.amplify-field__show-password {
+          background-color: white !important;
+          color: black !important;
+          border-color: var(--amplify-components-fieldcontrol-border-color) !important;
+          border-radius: 6px !important;
+        }
+        
+        /* Dark mode password button - better contrast border */
+        .dark [data-amplify-authenticator] .amplify-field__show-password,
+        .dark [data-amplify-authenticator] button.amplify-field__show-password {
+          border-color: #89949f !important;
+          background-color: rgb(0 0 0 / 0.1) !important;
+          color: #000 !important;
+          margin-left: 5px !important;
+          border-radius: 6px !important;
+        }
+        
+        [data-amplify-authenticator] .amplify-field__show-password:hover {
+          background-color: var(--accent) !important;
+          color: var(--accent-foreground) !important;
+        }
+        
+        /* Password input field - ensure right side is rounded */
+        [data-amplify-authenticator] input[type="password"],
+        [data-amplify-authenticator] .amplify-input[type="password"] {
+          border-radius: 6px !important;
         }
       `}</style>
     </>
@@ -214,7 +347,7 @@ function AuthSection({ onShowAuth }: { onShowAuth: () => void }) {
   }
   
   return (
-    <Button onClick={onShowAuth} variant="default" size="sm">
+    <Button onClick={onShowAuth} variant="default" size="sm" className="bg-[#467291] hover:bg-[#3a5e7a] dark:bg-primary dark:hover:bg-primary/90 text-white">
       Sign In
     </Button>
   );
