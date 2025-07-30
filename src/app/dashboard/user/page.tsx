@@ -310,13 +310,7 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 pt-0 max-w-6xl"
-         style={{
-           WebkitOverflowScrolling: 'touch',
-           touchAction: 'pan-y',
-           WebkitTransform: 'translateZ(0)',
-           transform: 'translateZ(0)'
-         }}>
+    <div className="container mx-auto px-4 py-6 pt-0 max-w-6xl">
       <div className="space-y-6">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">My Dashboard</h1>
@@ -327,13 +321,7 @@ export default function UserDashboard() {
 
         {/* Copy Success Toast - iOS optimized positioning */}
         {copySuccess && (
-          <div className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-sm transform-gpu will-change-transform"
-               style={{ 
-                 WebkitTransform: 'translateZ(0)',
-                 transform: 'translateZ(0)',
-                 WebkitBackfaceVisibility: 'hidden',
-                 backfaceVisibility: 'hidden'
-               }}>
+          <div className="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg max-w-sm transform-gpu will-change-transform">
             <div className="flex items-center gap-2">
               <CheckIcon className="text-green-600" />
               <span className="text-sm font-medium break-all">{copySuccess}</span>

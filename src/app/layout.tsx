@@ -3,6 +3,7 @@ import { Dosis, Roboto_Condensed, Ubuntu, Ubuntu_Mono } from "next/font/google";
 import "./globals.css";
 import AmplifySetup from "@/utilities/amplifySetup";
 import Navigation from "@/components/navigation";
+import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 
 
@@ -47,13 +48,12 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
       </head>
-      <body
-        className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased`}
-      >
+      <body className={`${dosis.variable} ${robotoCondensed.variable} ${ubuntu.variable} ${ubuntuMono.variable} antialiased min-h-screen flex flex-col`}>
         <AmplifySetup>
           <ThemeProvider>
             <Navigation />
-            {children}
+            <main className="flex-grow flex flex-col">{children}</main>
+            <Footer />
           </ThemeProvider>
         </AmplifySetup>
       </body>

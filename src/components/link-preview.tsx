@@ -119,7 +119,6 @@ interface LinkPreviewProps {
 
 export default function LinkPreview({ id, destination, trackingData, host = 'this domain' }: LinkPreviewProps) {
     const [currentHost, setCurrentHost] = useState(host);
-    const [currentYear, setCurrentYear] = useState(2024);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportSuccess, setReportSuccess] = useState(false);
     const [showFullUrl, setShowFullUrl] = useState(false);
@@ -136,7 +135,6 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     useEffect(() => {
         if (typeof window !== 'undefined') {
             setCurrentHost(window.location.host);
-            setCurrentYear(new Date().getFullYear());
             
             // Load autoforward preference from localStorage
             const savedAutoforward = localStorage.getItem('lytn-autoforward-enabled');
@@ -202,16 +200,9 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="min-h-screen bg-background overflow-hidden relative">
-            <div className="flex flex-col items-center justify-center h-full pb-20">
-                <div className="text-muted-foreground w-full min-h-[550px] h-full">
-                    <div 
-                        className="absolute w-full transform -translate-y-1/2"
-                        style={{ 
-                            top: '50%',
-                        }}
-                    >
-                        <div className="max-w-4xl mx-auto px-6">
+        <div className="bg-background flex-grow flex items-center justify-center">
+            <div className="w-full">
+                <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <h1 
@@ -354,18 +345,8 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
                             
                         </div>
                     </div>
-                </div>
-            </div>
+                
             
-            {/* Footer */}
-            <div 
-                className="fixed bottom-0 left-0 right-0 pb-[15px] text-xs w-full text-center text-muted-foreground"
-                style={{ fontFamily: 'var(--font-ubuntu)' }}
-            >
-                <div className="text-[11px] w-full text-center text-muted-foreground">
-                    © {currentYear} <a href="https://vibehouse.net" className="no-underline text-muted-foreground hover:text-foreground cursor-pointer">Vibe House LLC</a>
-                </div>
-            </div>
 
             {/* Report Modal */}
             {showReportModal && (
