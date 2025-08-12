@@ -32,18 +32,17 @@ export default async function importHandler(links: LinkToImport[], updateDuplica
     }
 
 
-    const updateIterator = async () => {
-
+    const updateIterator = async (increment: number) => {
         const iterator = await client.models.iterator.get({
             id: 'lytnit'
         }, { authMode: authType });
         if (iterator?.data?.iteration) {
             await client.models.iterator.update({
                 id: 'lytnit',
-                iteration: iterator?.data?.iteration + 1
-            })
+                iteration: increment
+            });
         }
-    }
+    };
 
     try {
         const successfulImports = [];
@@ -79,8 +78,7 @@ export default async function importHandler(links: LinkToImport[], updateDuplica
             const result = await client.models.ShortenedUrl.create(linkData, { authMode: authType });
 
             if (result?.data?.id) {
-                successfulImports.push(result?.data);
-                await updateIterator();
+                successfulImports.push(result.data);
             } else {
                 if (updateDuplicates) {
                     await client.models.ShortenedUrl.update(linkData, { authMode: authType });
@@ -88,6 +86,11 @@ export default async function importHandler(links: LinkToImport[], updateDuplica
                     failedImports.push(link);
                 }
             }
+        }
+
+        // After processing all links, update the iterator only when not updating duplicates
+        if (!updateDuplicates) {
+            await updateIterator(links.length);
         }
 
         return {
