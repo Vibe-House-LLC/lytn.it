@@ -93,7 +93,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     
     // Auto-sizing for the main heading - use actual short URL
     const headingText = `${currentHost}/${id}`;
-    const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 120, 12);
+    const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 100, 12);
 
     // Handle client-side only content to prevent hydration issues
     useEffect(() => {
@@ -164,7 +164,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="bg-background flex-grow flex items-center justify-center">
+        <div className="bg-background flex-grow flex items-center justify-center" style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
             <div className="w-full">
                 <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
