@@ -51,7 +51,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       storageKey="lytn-theme"
     >
       <AmplifyThemeProviderWrapper>
-        {children}
+        <div style={{ minHeight: '100dvh' }} className="flex flex-col w-full">
+          {children}
+        </div>
       </AmplifyThemeProviderWrapper>
     </NextThemesProvider>
   )

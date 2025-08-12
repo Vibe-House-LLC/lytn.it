@@ -30,61 +30,25 @@ const useAutoSizeText = (text: string, maxFontSize: number = 80, minFontSize: nu
             
             document.body.appendChild(tempElement);
 
-            // Calculate optimal font size based on available space
-            // Account for max-w-4xl (1024px) with more generous padding calculations
-            const isMobile = window.innerWidth < 768;
-            const maxContainerWidth = Math.min(1024, window.innerWidth);
-            
-            // Account for px-6 (24px each side) + additional margins and potential scrollbars
-            // On mobile, add extra padding to prevent edge clipping
-            const basePadding = 48; // px-6 = 24px each side
-            const extraBuffer = isMobile ? 48 : 32; // More buffer on mobile
-            const totalPadding = basePadding + extraBuffer;
-            const availableWidth = maxContainerWidth - totalPadding;
-            
-            // Use larger buffer for very long domains to ensure proper spacing
-            // More aggressive on mobile due to limited space
-            const buffer = isMobile 
-                ? (text.length > 25 ? 0.8 : text.length > 15 ? 0.85 : 0.9)
-                : (text.length > 30 ? 0.85 : text.length > 20 ? 0.9 : 0.95);
-            const containerWidth = availableWidth * buffer;
-            
-            let currentSize = maxFontSize;
-            tempElement.style.fontSize = `${currentSize}px`;
-            
-            // Reduce font size until text fits within container
-            while (tempElement.scrollWidth > containerWidth && currentSize > minFontSize) {
-                currentSize -= 1; // Smaller decrements for finer control
-                tempElement.style.fontSize = `${currentSize}px`;
-            }
+            // Calculate optimal font size based on the ACTUAL container width
+            const parentElement = element.parentElement;
+            const parentWidth = parentElement?.clientWidth ?? window.innerWidth;
+            // Small buffer to avoid touching container edges
+            const containerWidth = Math.max(0, Math.floor(parentWidth * 0.98));
 
-            // Additional reduction for longer text to maintain visual balance
-            const textLength = text.length;
-            if (textLength > 25) {
-                currentSize = Math.max(currentSize * 0.8, minFontSize);
-            } else if (textLength > 20) {
-                currentSize = Math.max(currentSize * 0.85, minFontSize);
-            } else if (textLength > 15) {
-                currentSize = Math.max(currentSize * 0.9, minFontSize);
+            // Start from the max size
+            tempElement.style.fontSize = `${maxFontSize}px`;
+            const textWidthAtMax = tempElement.scrollWidth;
+
+            let calculatedSize = maxFontSize;
+            if (textWidthAtMax > containerWidth) {
+                const scaleRatio = containerWidth / textWidthAtMax;
+                calculatedSize = Math.max(minFontSize, Math.floor(maxFontSize * scaleRatio));
             }
 
             document.body.removeChild(tempElement);
-            
-            const finalSize = Math.max(currentSize, minFontSize);
-            console.log('Auto-sizing debug:', {
-                text,
-                textLength: text.length,
-                isMobile,
-                containerWidth,
-                availableWidth,
-                totalPadding,
-                buffer,
-                calculatedSize: currentSize,
-                finalSize,
-                windowWidth: window.innerWidth
-            });
-            
-            setFontSize(finalSize);
+
+            setFontSize(calculatedSize);
             setIsCalculated(true);
         };
 
@@ -129,7 +93,7 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     
     // Auto-sizing for the main heading - use actual short URL
     const headingText = `${currentHost}/${id}`;
-    const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 120, 12);
+    const { fontSize, textRef, isCalculated } = useAutoSizeText(headingText, 100, 12);
 
     // Handle client-side only content to prevent hydration issues
     useEffect(() => {
@@ -200,14 +164,14 @@ export default function LinkPreview({ id, destination, trackingData, host = 'thi
     };
 
     return (
-        <div className="bg-background flex-grow flex items-center justify-center">
+        <div className="bg-background flex-grow flex items-center justify-center" style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
             <div className="w-full">
                 <div className="max-w-4xl mx-auto px-6">
                             {/* Logo */}
                             <div className="text-center mb-8">
                                 <h1 
                                     ref={textRef}
-                                    className="text-[#467291] dark:text-primary text-center leading-none mb-6 hover:text-[#5a8eb2] dark:hover:text-primary/80 transition-colors"
+                                    className="text-[#467291] dark:text-primary text-center leading-none mb-6 hover:text-[#5a8eb2] dark:hover:text-primary/80 transition-colors whitespace-nowrap"
                                     style={{ 
                                         fontFamily: 'var(--font-dosis)', 
                                         fontSize: `${fontSize}px`,

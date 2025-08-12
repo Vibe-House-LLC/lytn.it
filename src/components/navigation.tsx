@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ export default function Navigation() {
   const [showAuthenticator, setShowAuthenticator] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const { user } = useAuthenticator((context) => [context.user]);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   // Auto-close modal when user becomes authenticated
   useEffect(() => {
@@ -35,6 +37,28 @@ export default function Navigation() {
       }, 500);
     }
   }, [user, showAuthenticator]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const userInfo = await fetchAuthSession();
+      const groupsClaim = userInfo?.tokens?.idToken?.payload?.['cognito:groups'];
+      const isAdmin = Array.isArray(groupsClaim)
+        ? (groupsClaim as unknown[]).includes('admins')
+        : typeof groupsClaim === 'string'
+          ? groupsClaim.split(',').includes('admins')
+          : false;
+      setUserIsAdmin(isAdmin);
+    };
+    if (user) {
+      checkAdminStatus();
+    } else {
+      setUserIsAdmin(false);
+    }
+  }, [user]);
+
+  if (!userIsAdmin) {
+    return null
+  }
 
   return (
     <>
