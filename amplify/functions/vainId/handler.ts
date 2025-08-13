@@ -1,4 +1,3 @@
-import type { Handler } from 'aws-lambda';
 import { createHash } from 'crypto';
 import type { Schema } from '../../data/resource';
 import { Amplify } from "aws-amplify";
@@ -140,7 +139,7 @@ async function getIteration(): Promise<number> {
     }
 }
 
-export const handler: Handler = async (event) => {
+export const handler: Schema['vainId']['functionHandler'] = async (event) => {
     const { warmup } = event.arguments;
 
     if (warmup) {
