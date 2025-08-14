@@ -61,6 +61,17 @@ interface ShortenedUrl {
   ip?: string;
 }
 
+interface RawImportItem {
+  id?: string | number | null;
+  destination?: string | null;
+  createdAt?: string | null;
+  source?: string | null;
+  status?: string | null;
+  owner?: string | null;
+  ip?: string | null;
+  [key: string]: unknown; // Allow additional properties from database objects
+}
+
 interface ImportResult {
   successful: ShortenedUrl[];
   duplicates: ImportLink[];
@@ -106,10 +117,10 @@ export default function LinkImporter() {
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
 
-  const toShortenedUrls = (items: any[]): ShortenedUrl[] => {
+  const toShortenedUrls = (items: RawImportItem[]): ShortenedUrl[] => {
     return (items || [])
-      .filter((item: any) => item?.id && item?.destination)
-      .map((item: any) => ({
+      .filter((item: RawImportItem) => item?.id && item?.destination)
+      .map((item: RawImportItem) => ({
         id: String(item.id),
         destination: String(item.destination),
         createdAt: item.createdAt ?? undefined,

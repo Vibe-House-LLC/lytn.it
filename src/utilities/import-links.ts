@@ -34,6 +34,7 @@ const sanitizeUrl = (url: string): string => {
         return urlObj.toString();
     } catch (error) {
         // If URL constructor fails, do basic encoding of spaces and return
+        console.log('[IMPORT] sanitizeUrl error', error);
         return sanitized.replace(/\s+/g, '%20');
     }
 };
