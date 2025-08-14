@@ -100,8 +100,13 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
     try {
         const successfulImports = [];
         const failedImports = [];
+        let currentIndex = 0;
 
         for (const link of links) {
+            currentIndex++;
+            console.clear();
+            console.log(`[IMPORT] Processing ${currentIndex}/${links.length}`);
+
             // Prepare the data object with required fields
             // Sanitize and validate the destination URL
             const sanitizedDestination = sanitizeUrl(link.destination);
@@ -116,7 +121,7 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
             // console.debug('[IMPORT] Attempting create ShortenedUrl', { id: linkData.id, destination: linkData.destination, source: linkData.source, hasOwner: !!linkData.owner, status: linkData.status });
             const result = await client.models.ShortenedUrl.create(linkData, { authMode: 'userPool' });
 
-            console.log('[IMPORT] result', result);
+            // console.log('[IMPORT] result', result);
 
             if (result?.data?.id) {
                 // console.log('[IMPORT] Created ShortenedUrl', { id: result.data.id });
@@ -140,13 +145,13 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
 
         // const summary = { successfulCount: successfulImports.length, failedCount: failedImports.length };
         // console.log('[IMPORT] Finished import run', summary);
-        console.timeEnd('[IMPORT] importHandler total');
+        // console.timeEnd('[IMPORT] importHandler total');
         return {
             successfulImports,
             failedImports
         };
     } catch (error) {
         console.error('[IMPORT] Error importing links:', error);
-        console.timeEnd('[IMPORT] importHandler total');
+        // console.timeEnd('[IMPORT] importHandler total');
     }
 }
