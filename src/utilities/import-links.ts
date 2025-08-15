@@ -105,7 +105,6 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
 
         for (const link of links) {
             currentIndex++;
-            console.clear();
             console.log(`[IMPORT] Processing ${currentIndex}/${links.length}`);
 
             // Prepare the data object with required fields
