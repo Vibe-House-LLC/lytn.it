@@ -141,6 +141,7 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
                         }
                     } catch (updateError) {
                         // console.error('[IMPORT] Update operation threw error', { id: linkData.id, error: updateError });
+                        console.log('[IMPORT] Update operation threw error', { id: linkData.id, error: updateError });
                         failedImports.push(link);
                     }
                 } else {
