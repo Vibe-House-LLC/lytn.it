@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { importLinks } from '@/utilities/import-links';
 
 interface ImportLink {
   id: string;
@@ -60,6 +61,17 @@ interface ShortenedUrl {
   ip?: string;
 }
 
+interface RawImportItem {
+  id?: string | number | null;
+  destination?: string | null;
+  createdAt?: string | null;
+  source?: string | null;
+  status?: string | null;
+  owner?: string | null;
+  ip?: string | null;
+  [key: string]: unknown; // Allow additional properties from database objects
+}
+
 interface ImportResult {
   successful: ShortenedUrl[];
   duplicates: ImportLink[];
@@ -104,6 +116,20 @@ export default function LinkImporter() {
   const [showForceUpdateDialog, setShowForceUpdateDialog] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
+
+  const toShortenedUrls = (items: RawImportItem[]): ShortenedUrl[] => {
+    return (items || [])
+      .filter((item: RawImportItem) => item?.id && item?.destination)
+      .map((item: RawImportItem) => ({
+        id: String(item.id),
+        destination: String(item.destination),
+        createdAt: item.createdAt ?? undefined,
+        source: item.source ?? undefined,
+        status: item.status ?? undefined,
+        owner: item.owner ?? undefined,
+        ip: item.ip ?? undefined,
+      }));
+  };
 
   const parseCSV = useCallback((csvText: string): ImportLink[] => {
     const lines = csvText.trim().split('\n');
@@ -227,28 +253,33 @@ export default function LinkImporter() {
       }
 
       // Filter to only valid links (have id and destination)
-      const validLinks = parsedLinks.filter(link => link.id && link.destination);
+      const validLinks = parsedLinks.filter(link => link.id && link.destination).map(link => ({
+        id: link.id,
+        destination: link.destination
+      }));
 
       console.log('[LinkImporter] Starting import of', validLinks.length, 'links');
 
-      const response = await fetch('/api/v2/admin/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          links: validLinks,
-          updateDuplicates: false
-        })
-      });
+      // const response = await fetch('/api/v2/admin/import', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     links: validLinks,
+      //     updateDuplicates: false
+      //   })
+      // });
 
-      const data = await response.json();
+      // const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Import failed');
-      }
+      // if (!response.ok) {
+      //   throw new Error(data.error || 'Import failed');
+      // }
+
+      const data = await importLinks(validLinks, false);
 
       // Handle the response from the new API
-      const successful = data.successfulImports || [];
-      const duplicates = data.failedImports || [];
+      const successful = toShortenedUrls(data?.successfulImports || []);
+      const duplicates = data?.failedImports || [];
 
       setImportResult({
         successful,
@@ -336,24 +367,26 @@ export default function LinkImporter() {
 
       console.log('[LinkImporter] Force updating', importResult.duplicates.length, 'duplicates');
 
-      const response = await fetch('/api/v2/admin/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          links: importResult.duplicates,
-          updateDuplicates: true
-        })
-      });
+      // const response = await fetch('/api/v2/admin/import', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     links: importResult.duplicates,
+      //     updateDuplicates: true
+      //   })
+      // });
 
-      const data = await response.json();
+      // const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Force update failed');
-      }
+      // if (!response.ok) {
+      //   throw new Error(data.error || 'Force update failed');
+      // }
+
+      const data = await importLinks(importResult.duplicates, true);
 
       // Handle the response from force update
-      const successful = data.successfulImports || [];
-      const stillFailed = data.failedImports || [];
+      const successful = toShortenedUrls(data?.successfulImports || []);
+      const stillFailed = data?.failedImports || [];
 
       // Update the import result to remove successfully updated duplicates
       setImportResult(prev => prev ? {
