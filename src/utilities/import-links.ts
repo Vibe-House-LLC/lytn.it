@@ -166,5 +166,9 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
     } catch (error) {
         console.error('[IMPORT] Error importing links:', error);
         // console.timeEnd('[IMPORT] importHandler total');
+        return {
+            successfulImports: [],
+            failedImports: links // Return all links as failed when an error occurs
+        };
     }
 }
