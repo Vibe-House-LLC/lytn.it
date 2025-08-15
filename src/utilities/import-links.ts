@@ -130,7 +130,19 @@ export const importLinks = async (links: LinkToImport[], updateDuplicates: boole
             } else {
                 if (updateDuplicates) {
                     // console.log('[IMPORT] Create returned no id; attempting update for potential duplicate', { id: linkData.id });
-                    await client.models.ShortenedUrl.update(linkData, { authMode: 'userPool' });
+                    try {
+                        const updateResult = await client.models.ShortenedUrl.update(linkData, { authMode: 'userPool' });
+                        if (updateResult?.data?.id) {
+                            // console.log('[IMPORT] Updated ShortenedUrl', { id: updateResult.data.id });
+                            successfulImports.push(updateResult.data);
+                        } else {
+                            // console.warn('[IMPORT] Update operation failed or returned no data', { id: linkData.id });
+                            failedImports.push(link);
+                        }
+                    } catch (updateError) {
+                        // console.error('[IMPORT] Update operation threw error', { id: linkData.id, error: updateError });
+                        failedImports.push(link);
+                    }
                 } else {
                     // console.warn('[IMPORT] Failed to create ShortenedUrl and duplicates not updated; marking as failed', { id: linkData.id });
                     failedImports.push(link);
